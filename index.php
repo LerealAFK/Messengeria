@@ -27,6 +27,17 @@ $messages = $stmt->fetchAll();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="google-adsense-account" content="ca-pub-3246646337802566">
+    <meta name="apple-mobile-web-app-capable" content="yes"> <!-- Active le mode plein écran pour iOS -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"> <!-- Style de la barre d'état -->
+    <meta name="apple-mobile-web-app-title" content="messengeria"> <!-- Nom de l'application sur iOS -->
+    <meta name="description" content="une messagerie interessante, belle et amusante">
+    <meta name="theme-color" content="#0078d4"> <!-- Couleur du thème pour les navigateurs modernes -->
+
+    <!-- Icônes pour les appareils Apple -->
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="messengeria.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="messengeria.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="messengeria.png">
     <title>Accueil - Messengeria</title>
     <link rel="stylesheet" href="styles/indexStyle.css">
 </head>
