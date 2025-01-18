@@ -30,6 +30,25 @@ $messages = $stmt->fetchAll();
     <title>Accueil - Messengeria</title>
     <link rel="stylesheet" href="styles/indexStyle.css">
 </head>
+    <!-- Google Tag Manager Consent Mode -->
+<script>
+  // Google Consent Mode configuration
+  function enableGoogleConsent() {
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = window.gtag || function(){dataLayer.push(arguments);}
+    
+    gtag('consent', 'default', {
+      'ad_storage': 'denied', // Publicité : refusée par défaut
+      'analytics_storage': 'denied', // Analytics : refusée par défaut
+      'functionality_storage': 'granted', // Fonctionnalité : consentie
+      'personalization_storage': 'denied' // Personnalisation : refusée par défaut
+    });
+  }
+  
+  // Appel de la fonction à l'instant où l'utilisateur accepte ou refuse
+  enableGoogleConsent();
+</script>
+
 <body>
     <div class="container">
         <!-- index.php -->
