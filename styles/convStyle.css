@@ -100,3 +100,12 @@ a:hover {
 .conversation-button:focus {
     outline: none;  /* Pas de contour au focus */
 }
+
+.profile-picture {
+    width: 40px; /* Taille de la photo */
+    height: 40px;
+    border-radius: 50%; /* Rendre la photo circulaire */
+    object-fit: cover; /* Ajuster l'image dans le conteneur */
+    margin-right: 10px; /* Espacement avec le texte */
+    border: 2px solid #ddd; /* Bordure esthétique */
+}
