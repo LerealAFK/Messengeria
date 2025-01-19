@@ -59,16 +59,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message'])) {
                 // Vérifier si le message est de l'utilisateur actuel
                 $is_current_user = $msg['sender_email'] == $_SESSION['email'];
 
-                // Récupérer la photo de profil de l'utilisateur qui a envoyé le message
-                $stmt = $pdo->prepare("SELECT profile_picture FROM users WHERE email = ?");
-                $stmt->execute([$msg['sender_email']]);
-                $user = $stmt->fetch();
-                $profile_picture = $user['profile_picture'] ?? 'default_profile.png'; // Valeur par défaut si aucune photo
-
                 ?>
                 <div class="message <?php echo $is_current_user ? 'current-user' : 'other-user'; ?>">
                     <div class="message-header">
-                        <img src="<?php echo htmlspecialchars($profile_picture); ?>" alt="Photo de profil" class="profile-picture">
+                        
                         <p><strong><?php echo htmlspecialchars($msg['sender_email']); ?></strong> a écrit :</p>
                     </div>
                     <p><?php echo nl2br(htmlspecialchars($msg['message'])); ?></p>
