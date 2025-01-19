@@ -14,14 +14,16 @@ $stmt = $pdo->prepare("SELECT * FROM conversations WHERE user1_email = ? OR user
 $stmt->execute([$user_email, $user_email]);
 $conversations = $stmt->fetchAll();
 
-// Récupérer les photos de profil associées aux utilisateurs des conversations
-$user_pictures = [];
+// Préparer les images de profil pour les utilisateurs
+$profile_pictures = [];
 foreach ($conversations as $conv) {
     $other_user_email = $conv['user1_email'] == $user_email ? $conv['user2_email'] : $conv['user1_email'];
-    if (!isset($user_pictures[$other_user_email])) {
+    // Récupérer la photo de profil de l'autre utilisateur si elle n'est pas déjà dans le tableau
+    if (!isset($profile_pictures[$other_user_email])) {
         $stmt = $pdo->prepare("SELECT profile_picture FROM users WHERE email = ?");
         $stmt->execute([$other_user_email]);
-        $user_pictures[$other_user_email] = $stmt->fetchColumn();
+        $user = $stmt->fetch();
+        $profile_pictures[$other_user_email] = $user['profile_picture'] ?? 'default_profile.png'; // Image par défaut si aucune photo n'existe
     }
 }
 ?>
@@ -46,8 +48,11 @@ foreach ($conversations as $conv) {
         <ul class="conversation-list">
             <?php foreach ($conversations as $conv): ?>
                 <?php 
+                    // Identifier l'autre utilisateur dans la conversation
                     $other_user_email = $conv['user1_email'] == $user_email ? $conv['user2_email'] : $conv['user1_email'];
-                    $profile_picture = $user_pictures[$other_user_email] ?? 'default.png'; // Image par défaut si pas de photo
+
+                    // Utiliser la photo de profil récupérée ou l'image par défaut
+                    $profile_picture = $profile_pictures[$other_user_email];
                 ?>
                 <li class="conversation-item">
                     <img src="<?php echo htmlspecialchars($profile_picture); ?>" alt="Photo de profil" class="profile-picture">
