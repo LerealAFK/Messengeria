@@ -15,7 +15,7 @@ if (!isset($_GET['email'])) {
 $email = $_GET['email'];
 
 // Vérifier si l'utilisateur existe
-$stmt = $pdo->prepare("SELECT email FROM users WHERE email = ?");
+$stmt = $pdo->prepare("SELECT email, profile_picture FROM users WHERE email = ?");
 $stmt->execute([$email]);
 $user = $stmt->fetch();
 
@@ -23,6 +23,9 @@ if (!$user) {
     echo "Utilisateur introuvable.";
     exit();
 }
+
+// Récupérer la photo de profil de l'utilisateur
+$profile_picture = $user['profile_picture'] ?? null;
 
 // Récupérer les messages de l'utilisateur
 $stmt = $pdo->prepare("SELECT message, created_at FROM messages WHERE email = ? ORDER BY created_at DESC");
@@ -44,6 +47,15 @@ $messages = $stmt->fetchAll();
             <a href="index.php" class="home-button">🏠</a>
         </div>
         <h1>Profil de : <?php echo htmlspecialchars($email); ?></h1>
+
+        <!-- Affichage de la photo de profil -->
+        <div class="profile-picture">
+            <?php if ($profile_picture): ?>
+                <img src="<?php echo htmlspecialchars($profile_picture); ?>" alt="Photo de profil" class="profile-img">
+            <?php else: ?>
+                <img src="default-avatar.png" alt="Photo de profil par défaut" class="profile-img">
+            <?php endif; ?>
+        </div>
 
         <!-- Bouton pour démarrer une nouvelle conversation -->
         <?php if ($_SESSION['email'] != $email): ?>
@@ -72,7 +84,6 @@ $messages = $stmt->fetchAll();
                 <?php endforeach; ?>
             <?php endif; ?>
         </div>
-
     </div>
     <script>
     function showDeleteButton(element) {
@@ -89,6 +100,6 @@ $messages = $stmt->fetchAll();
         }
     }
     </script>
-
 </body>
 </html>
+

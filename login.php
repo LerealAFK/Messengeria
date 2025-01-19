@@ -27,7 +27,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="google-adsense-account" content="ca-pub-3246646337802566">
     <title>Connexion</title>
     <link rel="stylesheet" href="styles/loginStyle.css">
 </head>
