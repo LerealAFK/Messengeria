@@ -12,7 +12,7 @@ $search = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['search'])) {
     $search = trim($_POST['search']);
-    $stmt = $pdo->prepare("SELECT email FROM users WHERE email LIKE ?");
+    $stmt = $pdo->prepare("SELECT pronouns, email FROM users WHERE pronouns LIKE ?");
     $stmt->execute(['%' . $search . '%']);
     $results = $stmt->fetchAll();
 }
@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['search'])) {
     <div class="container">
         <h1>Rechercher un utilisateur</h1>
         <form action="search.php" method="POST">
-            <input type="text" name="search" placeholder="Tapez une adresse email..." value="<?php echo htmlspecialchars($search); ?>" required>
+            <input type="text" name="search" placeholder="Tapez un pronom..." value="<?php echo htmlspecialchars($search); ?>" required>
             <button type="submit">Rechercher</button>
         </form>
         <div class="results">
@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['search'])) {
                         <?php foreach ($results as $user): ?>
                             <li>
                                 <a href="profile.php?email=<?php echo urlencode($user['email']); ?>">
-                                    <?php echo htmlspecialchars($user['email']); ?>
+                                    <?php echo htmlspecialchars($user['pronouns']); ?>
                                 </a>
                             </li>
                         <?php endforeach; ?>
