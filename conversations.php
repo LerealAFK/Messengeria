@@ -63,5 +63,8 @@ foreach ($conversations as $conv) {
             <?php endforeach; ?>
         </ul>
     </div>
+    <a href="index.php">
+        <button class="settings-button">🏠</button>
+    </a>
 </body>
 </html>
