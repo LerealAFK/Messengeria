@@ -14,17 +14,36 @@ $stmt = $pdo->prepare("SELECT * FROM conversations WHERE user1_email = ? OR user
 $stmt->execute([$user_email, $user_email]);
 $conversations = $stmt->fetchAll();
 
-// Préparer les images de profil pour les utilisateurs
-$profile_pictures = [];
+// Préparer les détails des utilisateurs et les messages non lus
+$user_details = [];
+$conversations_with_unread = [];
 foreach ($conversations as $conv) {
     $other_user_email = $conv['user1_email'] == $user_email ? $conv['user2_email'] : $conv['user1_email'];
-    // Récupérer la photo de profil de l'autre utilisateur si elle n'est pas déjà dans le tableau
-    if (!isset($profile_pictures[$other_user_email])) {
-        $stmt = $pdo->prepare("SELECT profile_picture FROM users WHERE email = ?");
+
+    // Récupérer les détails de l'autre utilisateur
+    if (!isset($user_details[$other_user_email])) {
+        $stmt = $pdo->prepare("SELECT pronouns, profile_picture FROM users WHERE email = ?");
         $stmt->execute([$other_user_email]);
         $user = $stmt->fetch();
-        $profile_pictures[$other_user_email] = $user['profile_picture'] ?? 'default_profile.png'; // Image par défaut si aucune photo n'existe
+        $user_details[$other_user_email] = [
+            'pronouns' => $user['pronouns'] ?? 'Utilisateur',
+            'profile_picture' => $user['profile_picture'] ?? 'default_profile.png'
+        ];
     }
+
+    // Récupérer le nombre de messages non lus
+    $stmt = $pdo->prepare("
+        SELECT COUNT(*) AS unread_count
+        FROM private_message
+        WHERE conversation_id = ?
+        AND sender_email != ?
+        AND is_read = 0
+    ");
+    $stmt->execute([$conv['id'], $user_email]);
+    $unread_count = $stmt->fetch()['unread_count'];
+
+    $conv['unread_count'] = $unread_count;
+    $conversations_with_unread[] = $conv;
 }
 ?>
 
@@ -35,33 +54,33 @@ foreach ($conversations as $conv) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mes Conversations</title>
     <link rel="stylesheet" href="styles/convStyle.css">
+    
 </head>
 <body>
     <div class="container">
-        <div style="margin: 20px 0;">
-            <a href="search.php">
-                <button class="conversation-button">+</button>
-            </a>
-        </div>
-
         <h1>Mes Conversations</h1>
-        <ul class="conversation-list">
-            <?php foreach ($conversations as $conv): ?>
-                <?php 
-                    // Identifier l'autre utilisateur dans la conversation
-                    $other_user_email = $conv['user1_email'] == $user_email ? $conv['user2_email'] : $conv['user1_email'];
 
-                    // Utiliser la photo de profil récupérée ou l'image par défaut
-                    $profile_picture = $profile_pictures[$other_user_email];
+        <ul class="conversation-list">
+            <?php foreach ($conversations_with_unread as $conv): ?>
+                <?php 
+                    $other_user_email = $conv['user1_email'] == $user_email ? $conv['user2_email'] : $conv['user1_email'];
+                    $details = $user_details[$other_user_email];
                 ?>
                 <li class="conversation-item">
-                    <img src="<?php echo htmlspecialchars($profile_picture); ?>" alt="Photo de profil" class="profile-picture">
+                    <img class="profile-picture" src="<?php echo htmlspecialchars($details['profile_picture']); ?>" alt="Photo de profil">
                     <a href="chat.php?conversation_id=<?php echo $conv['id']; ?>">
-                        <?php echo htmlspecialchars($other_user_email); ?>
+                        <?php echo htmlspecialchars($details['pronouns']); ?>
                     </a>
+                    <?php if ($conv['unread_count'] > 0): ?>
+                        <span class="notification">(<?php echo $conv['unread_count']; ?> non lus)</span>
+                    <?php endif; ?>
                 </li>
             <?php endforeach; ?>
         </ul>
     </div>
+
+    <a href="index.php">
+        <button class="conversation-button">🏠</button>
+    </a>
 </body>
 </html>
