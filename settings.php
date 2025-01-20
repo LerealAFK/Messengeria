@@ -154,6 +154,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <button type="submit">Mettre à jour la photo de profil</button>
         </form>
     </div>
+    <a href="index.php">
+        <button class="conversation-button">🏠</button>
+    </a>
 
     <script>
         document.getElementById('profile_picture').addEventListener('change', function () {
