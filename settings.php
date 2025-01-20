@@ -30,9 +30,7 @@ function uploadToImgur($filePath) {
     return $responseData['success'] ? $responseData['data']['link'] : false;
 }
 
-// Variables pour les messages d'erreur ou de succès
-$error = "";
-$success = "";
+
 
 // Récupérer les informations de l'utilisateur
 $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
