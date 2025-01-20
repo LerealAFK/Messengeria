@@ -26,12 +26,48 @@ $stmt = $pdo->prepare("
 $stmt->execute(['email' => $_SESSION['email']]);
 $unread_count = $stmt->fetch()['unread_count'];
 
+// Initialiser un message d'erreur (vide par défaut)
+$error_message = "";
+
 // Gestion de l'envoi de messages
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message'])) {
     $message = trim($_POST['message']);
+
     if (!empty($message)) {
-        $stmt = $pdo->prepare("INSERT INTO messages (email, message) VALUES (?, ?)");
-        $stmt->execute([$_SESSION['email'], $message]);
+        // Vérifier si l'utilisateur a déjà envoyé un message identique
+        $stmt = $pdo->prepare("
+            SELECT message, created_at 
+            FROM messages 
+            WHERE email = ? 
+            ORDER BY created_at DESC 
+            LIMIT 1
+        ");
+        $stmt->execute([$_SESSION['email']]);
+        $last_message = $stmt->fetch();
+
+        // Vérifier si le message est identique ou trop proche dans le temps
+        $min_time_gap = 1; // Délai minimum en secondes
+        $can_send = true;
+
+        if ($last_message) {
+            $last_message_time = strtotime($last_message['created_at']); // Convertir le timestamp en format UNIX
+            $time_diff = time() - $last_message_time;
+
+            if ($last_message['message'] === $message) {
+                $can_send = false;
+                $error_message = "Vous ne pouvez pas envoyer deux fois le même message.";
+            } 
+            
+        }
+
+
+        // Insérer le message si toutes les conditions sont remplies
+        if ($can_send) {
+            $stmt = $pdo->prepare("INSERT INTO messages (email, message) VALUES (?, ?)");
+            $stmt->execute([$_SESSION['email'], $message]);
+        }
+    } else {
+        $error_message = "Le message ne peut pas être vide.";
     }
 }
 
@@ -74,6 +110,11 @@ $messages = $stmt->fetchAll();
         <!-- Message de bienvenue -->
         <h1>Bienvenue sur Messengeria, <?php echo htmlspecialchars($pronouns); ?> !</h1>
 
+        <!-- Afficher un message d'erreur s'il y en a -->
+        <?php if (!empty($error_message)): ?>
+            <div class="error-message"><?php echo htmlspecialchars($error_message); ?></div>
+        <?php endif; ?>
+
         <!-- Formulaire d'envoi de message public -->
         <form action="index.php" method="POST">
             <textarea name="message" placeholder="Écris un message public..." required></textarea>
@@ -84,12 +125,10 @@ $messages = $stmt->fetchAll();
         <h2>Messages publics :</h2>
         <div class="messages">
             <?php foreach ($messages as $msg): ?>
-                <?php 
-                $profile_picture = $msg['profile_picture'] ?? 'default_profile.png';
-                ?>
                 <div class="message">
                     <div class="message-header">
-                        <img src="<?php echo htmlspecialchars($profile_picture); ?>" alt="Photo de profil" class="profile-picture">
+                        <img src="<?php echo htmlspecialchars($msg['profile_picture'] ?: 'default-profile.png'); ?>" 
+                             alt="Photo de profil" class="profile-picture">
                         <p><strong><?php echo htmlspecialchars($msg['pronouns'] ?: "Anonyme"); ?></strong> a écrit :</p>
                     </div>
                     <p><?php echo nl2br(htmlspecialchars($msg['message'])); ?></p>
