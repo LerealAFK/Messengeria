@@ -8,103 +8,77 @@ if (!isset($_SESSION['email'])) {
     exit();
 }
 
-$success ='';
-$error = '';
-
-// Fonction pour téléverser une image sur le serveur
-function uploadToServer($filePath) {
-    $url = 'https://imgmessengeria.onrender.com/index.php'; // URL de votre serveur
-    $cfile = new CURLFile($filePath);
-
-    $postData = [
-        'image' => $cfile
-    ];
-
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: multipart/form-data']);
-
-    $response = curl_exec($ch);
-    curl_close($ch);
-
-    $responseData = json_decode($response, true);
-
-    // Vérifier si le téléversement a réussi et retourner l'URL
-    if (isset($responseData['success']) && $responseData['success']) {
-        return $responseData['url']; // URL de l'image téléchargée
-    } else {
-        return false; // Échec du téléversement
-    }
-}
-
-
-// Récupérer les informations de l'utilisateur
-$stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
+// Récupérer les informations de l'utilisateur connecté (uniquement les pronoms)
+$stmt = $pdo->prepare("SELECT pronouns FROM users WHERE email = ?");
 $stmt->execute([$_SESSION['email']]);
-$user = $stmt->fetch();
-$profile_picture = $user['profile_picture'] ?? null;
-$pronouns = $user['pronouns'] ?? "";
+$current_user = $stmt->fetch();
+$pronouns = $current_user['pronouns'] ?? "Utilisateur";
 
-// Gérer les soumissions POST
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Mise à jour des pronoms
-    if (isset($_POST['pronouns'])) {
-        $new_pronouns = trim($_POST['pronouns']);
-        $stmt = $pdo->prepare("UPDATE users SET pronouns = ? WHERE email = ?");
-        $stmt->execute([$new_pronouns, $_SESSION['email']]);
-        $success = "Pronoms mis à jour avec succès.";
-    }
+// Récupérer le nombre de messages non lus
+$stmt = $pdo->prepare("
+    SELECT COUNT(*) as unread_count 
+    FROM private_message pm
+    JOIN conversations c ON c.id = pm.conversation_id
+    WHERE (c.user1_email = :email OR c.user2_email = :email)
+    AND pm.sender_email != :email
+    AND pm.is_read = 0
+");
+$stmt->execute(['email' => $_SESSION['email']]);
+$unread_count = $stmt->fetch()['unread_count'];
 
-    // Mise à jour de la photo de profil
-    if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] === UPLOAD_ERR_OK) {
-        $fileTmpPath = $_FILES['profile_picture']['tmp_name'];
-        $fileType = mime_content_type($fileTmpPath);
-        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+// Initialiser un message d'erreur (vide par défaut)
+$error_message = "";
 
-        if (in_array($fileType, $allowedTypes)) {
-            $imgurLink = uploadToServer($fileTmpPath);
+// Gestion de l'envoi de messages
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message'])) {
+    $message = trim($_POST['message']);
 
-            if ($imgurLink) {
-                $stmt = $pdo->prepare("UPDATE users SET profile_picture = ? WHERE email = ?");
-                $stmt->execute([$imgurLink, $_SESSION['email']]);
-                $success = "Photo de profil mise à jour avec succès.";
-            } else {
-                $error = "Échec du téléversement sur Imgur.";
-            }
-        } else {
-            $error = "Veuillez télécharger une image valide (JPEG, PNG, GIF).";
+    if (!empty($message)) {
+        // Vérifier si l'utilisateur a déjà envoyé un message identique
+        $stmt = $pdo->prepare("
+            SELECT message, created_at 
+            FROM messages 
+            WHERE email = ? 
+            ORDER BY created_at DESC 
+            LIMIT 1
+        ");
+        $stmt->execute([$_SESSION['email']]);
+        $last_message = $stmt->fetch();
+
+        // Vérifier si le message est identique ou trop proche dans le temps
+        $min_time_gap = 1; // Délai minimum en secondes
+        $can_send = true;
+
+        if ($last_message) {
+            $last_message_time = strtotime($last_message['created_at']); // Convertir le timestamp en format UNIX
+            $time_diff = time() - $last_message_time;
+
+            if ($last_message['message'] === $message) {
+                $can_send = false;
+                $error_message = "Vous ne pouvez pas envoyer deux fois le même message.";
+            } 
+            
         }
-    }
 
-    // Mise à jour de l'email
-    if (isset($_POST['new_email'])) {
-        $new_email = trim($_POST['new_email']);
-        if (filter_var($new_email, FILTER_VALIDATE_EMAIL)) {
-            $stmt = $pdo->prepare("UPDATE users SET email = ? WHERE email = ?");
-            $stmt->execute([$new_email, $_SESSION['email']]);
-            $_SESSION['email'] = $new_email;
-            $success = "Email mis à jour avec succès.";
-        } else {
-            $error = "Veuillez entrer un email valide.";
-        }
-    }
 
-    // Mise à jour du mot de passe
-    if (isset($_POST['new_password'])) {
-        $new_password = trim($_POST['new_password']);
-        if (strlen($new_password) >= 6) {
-            $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
-            $stmt = $pdo->prepare("UPDATE users SET password = ? WHERE email = ?");
-            $stmt->execute([$hashed_password, $_SESSION['email']]);
-            $success = "Mot de passe mis à jour avec succès.";
-        } else {
-            $error = "Le mot de passe doit comporter au moins 6 caractères.";
+        // Insérer le message si toutes les conditions sont remplies
+        if ($can_send) {
+            $stmt = $pdo->prepare("INSERT INTO messages (email, message) VALUES (?, ?)");
+            $stmt->execute([$_SESSION['email'], $message]);
         }
+    } else {
+        $error_message = "Le message ne peut pas être vide.";
     }
 }
+
+// Récupérer tous les messages publics
+$stmt = $pdo->query("
+    SELECT m.message, m.created_at, u.pronouns, u.profile_picture 
+    FROM messages m
+    JOIN users u ON m.email = u.email
+    ORDER BY m.created_at DESC
+");
+$messages = $stmt->fetchAll();
 ?>
 
 <!DOCTYPE html>
@@ -112,78 +86,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Paramètres - Messengeria</title>
-    <link rel="stylesheet" href="styles/settingStyle.css">
+    <link rel="stylesheet" href="styles/indexStyle.css">
+    <title>Accueil - Messengeria</title>
 </head>
 <body>
     <div class="container">
-        <div class="top-bar">
-            <form action="logout.php" method="POST">
-                <button type="submit" class="logout-button">Déconnexion</button>
-            </form>
+        <!-- Bouton pour accéder aux conversations -->
+        <div style="margin: 20px 0;">
+            <a href="conversations.php">
+                <button class="conversation-button">
+                    💬 <?php if ($unread_count > 0): ?>
+                        <span class="notification"><?php echo $unread_count; ?></span>
+                    <?php endif; ?>
+                </button>
+            </a>
         </div>
+        <a href="settings.php">
+            <button class="settings-button">
+                ⚙️ 
+            </button>
+        </a>
 
-        <!-- Photo de profil -->
-        <div class="profile-picture">
-            <?php if ($profile_picture): ?>
-                <img src="<?php echo htmlspecialchars($profile_picture); ?>" alt="Photo de profil" class="profile-img">
-            <?php else: ?>
-                <img src="default-avatar.png" alt="Photo de profil par défaut" class="profile-img">
-            <?php endif; ?>
+        <!-- Message de bienvenue -->
+        <h1>Bienvenue sur Messengeria, <?php echo htmlspecialchars($pronouns); ?> !</h1>
+
+        <!-- Afficher un message d'erreur s'il y en a -->
+        <?php if (!empty($error_message)): ?>
+            <div class="error-message"><?php echo htmlspecialchars($error_message); ?></div>
+        <?php endif; ?>
+
+        <!-- Formulaire d'envoi de message public -->
+        <form action="index.php" method="POST">
+            <textarea name="message" placeholder="Écris un message public..." required></textarea>
+            <button type="submit">Envoyer le message</button>
+        </form>
+
+        <!-- Affichage des messages publics -->
+        <h2>Messages publics :</h2>
+        <div class="messages">
+            <?php foreach ($messages as $msg): ?>
+                <div class="message">
+                    <div class="message-header">
+                        <img src="<?php echo htmlspecialchars($msg['profile_picture'] ?: 'default-profile.png'); ?>" 
+                             alt="Photo de profil" class="profile-picture">
+                        <p><strong><?php echo htmlspecialchars($msg['pronouns'] ?: "Anonyme"); ?></strong> a écrit :</p>
+                    </div>
+                    <p><?php echo nl2br(htmlspecialchars($msg['message'])); ?></p>
+                    <small>Posté le <?php echo htmlspecialchars($msg['created_at']); ?></small>
+                </div>
+            <?php endforeach; ?>
         </div>
-
-        <h1>Paramètres de votre compte</h1>
-
-        <!-- Messages d'erreur ou de succès -->
-        <?php if ($error): ?>
-            <div class="error-message"><?php echo htmlspecialchars($error); ?></div>
-        <?php endif; ?>
-        <?php if ($success): ?>
-            <div class="success-message"><?php echo htmlspecialchars($success); ?></div>
-        <?php endif; ?>
-
-        <!-- Formulaire de mise à jour des pronoms -->
-        <form action="settings.php" method="POST">
-            <label for="pronouns">Vos pronoms :</label>
-            <input type="text" id="pronouns" name="pronouns" placeholder="Exemple : il/lui, elle/elle, iel" value="<?php echo htmlspecialchars($pronouns); ?>">
-            <button type="submit">Mettre à jour les pronoms</button>
-        </form>
-
-        <!-- Formulaire de mise à jour de l'email -->
-        <form action="settings.php" method="POST">
-            <label for="new_email">Changer l'email :</label>
-            <input type="email" id="new_email" name="new_email" placeholder="Entrez votre nouvel email" value="<?php echo htmlspecialchars($_SESSION['email']); ?>" required>
-            <button type="submit">Mettre à jour l'email</button>
-        </form>
-
-        <!-- Formulaire de mise à jour du mot de passe -->
-        <form action="settings.php" method="POST">
-            <label for="new_password">Changer le mot de passe :</label>
-            <input type="password" id="new_password" name="new_password" placeholder="Entrez votre nouveau mot de passe" required>
-            <button type="submit">Mettre à jour le mot de passe</button>
-        </form>
-
-        <!-- Formulaire de mise à jour de la photo de profil -->
-        <form action="settings.php" method="POST" enctype="multipart/form-data">
-            <label for="profile_picture">Télécharger une nouvelle photo de profil :</label>
-            <input type="file" id="profile_picture" name="profile_picture" accept="image/*">
-            <button type="submit">Mettre à jour la photo de profil</button>
-        </form>
     </div>
-    <a href="index.php">
-        <button class="conversation-button">🏠</button>
-    </a>
-
-    <script>
-        document.getElementById('profile_picture').addEventListener('change', function () {
-            const maxSize = 2 * 1024 * 1024; // 2 Mo
-            const file = this.files[0];
-
-            if (file && file.size > maxSize) {
-                alert("La taille de l'image ne doit pas dépasser 2 Mo.");
-                this.value = ""; // Réinitialiser le champ
-            }
-        });
-    </script>
 </body>
 </html>
