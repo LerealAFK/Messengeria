@@ -8,6 +8,25 @@ if (!isset($_SESSION['email'])) {
     exit();
 }
 
+// Fonction pour téléverser une image sur Imgur
+function uploadToImgur($filePath) {
+    $clientId = '36b0c5c2966a802'; // Remplacez par votre client ID
+    $imageData = file_get_contents($filePath);
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, 'https://api.imgur.com/3/image');
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization: Client-ID ' . $clientId]);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, ['image' => base64_encode($imageData)]);
+
+    $response = curl_exec($ch);
+    curl_close($ch);
+
+    $responseData = json_decode($response, true);
+    return $responseData['success'] ? $responseData['data']['link'] : false;
+}
+
 // Variables pour les messages d'erreur ou de succès
 $error = "";
 $success = "";
@@ -32,34 +51,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Mise à jour de la photo de profil
     if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] === UPLOAD_ERR_OK) {
         $fileTmpPath = $_FILES['profile_picture']['tmp_name'];
-        $fileName = $_FILES['profile_picture']['name'];
-        $fileSize = $_FILES['profile_picture']['size'];
-        $fileType = $_FILES['profile_picture']['type'];
-
-        $maxFileSize = 2 * 1024 * 1024; // 2 Mo
+        $fileType = mime_content_type($fileTmpPath);
         $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
 
-        if ($fileSize > $maxFileSize) {
-            $error = "La taille de l'image ne doit pas dépasser 2 Mo.";
-        } elseif (!in_array($fileType, $allowedTypes)) {
-            $error = "Veuillez télécharger une image valide (JPEG, PNG, GIF).";
-        } else {
-            $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-            $newFileName = time() . '_' . $_SESSION['email'] . '.' . $fileExtension;
+        if (in_array($fileType, $allowedTypes)) {
+            $imgurLink = uploadToImgur($fileTmpPath);
 
-            $uploadDir = 'uploads/';
-            if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0755, true);
-            }
-            $dest_path = $uploadDir . $newFileName;
-
-            if (move_uploaded_file($fileTmpPath, $dest_path)) {
+            if ($imgurLink) {
                 $stmt = $pdo->prepare("UPDATE users SET profile_picture = ? WHERE email = ?");
-                $stmt->execute([$dest_path, $_SESSION['email']]);
+                $stmt->execute([$imgurLink, $_SESSION['email']]);
                 $success = "Photo de profil mise à jour avec succès.";
             } else {
-                $error = "Une erreur est survenue lors du téléversement.";
+                $error = "Échec du téléversement sur Imgur.";
             }
+        } else {
+            $error = "Veuillez télécharger une image valide (JPEG, PNG, GIF).";
         }
     }
 
@@ -156,7 +162,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
     <a href="index.php">
         <button class="conversation-button">🏠</button>
-    </a> 
+    </a>
 
     <script>
         document.getElementById('profile_picture').addEventListener('change', function () {
