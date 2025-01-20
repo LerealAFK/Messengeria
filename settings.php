@@ -2,6 +2,9 @@
 session_start();
 include('db.php');
 
+$error = "";
+$success = "";
+
 // Vérifier si l'utilisateur est connecté
 if (!isset($_SESSION['email'])) {
     header('Location: login.php');
