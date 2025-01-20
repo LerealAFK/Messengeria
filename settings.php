@@ -156,7 +156,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
     <a href="index.php">
         <button class="conversation-button">🏠</button>
-    </a>
+    </a> 
 
     <script>
         document.getElementById('profile_picture').addEventListener('change', function () {
