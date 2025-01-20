@@ -26,6 +26,15 @@ if (!$conversation) {
     exit();
 }
 
+$stmt = $pdo->prepare("
+    UPDATE private_message 
+    SET is_read = 1 
+    WHERE conversation_id = ? 
+    AND sender_email != ?
+");
+$stmt->execute([$conversation_id, $user_email]);
+
+
 // Récupérer les messages de la conversation
 $stmt = $pdo->prepare("SELECT sender_email, message, created_at FROM private_message WHERE conversation_id = ? ORDER BY created_at ASC");
 $stmt->execute([$conversation_id]);
@@ -48,21 +57,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Conversation - Messengeria</title>
     <link rel="stylesheet" href="styles/chatStyle.css">
+    <style>
+        .messages {
+            max-height: 70vh; /* Limiter la hauteur pour permettre un défilement */
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <h1>Conversation avec <?php echo htmlspecialchars($conversation['user1_email'] == $user_email ? $conversation['user2_email'] : $conversation['user1_email']); ?></h1>
 
-        <div class="messages">
+        <div class="messages" id="messageContainer">
             <?php foreach ($messages as $msg): ?>
                 <?php
                 // Vérifier si le message est de l'utilisateur actuel
                 $is_current_user = $msg['sender_email'] == $_SESSION['email'];
-
                 ?>
                 <div class="message <?php echo $is_current_user ? 'current-user' : 'other-user'; ?>">
                     <div class="message-header">
-                        
                         <p><strong><?php echo htmlspecialchars($msg['sender_email']); ?></strong> a écrit :</p>
                     </div>
                     <p><?php echo nl2br(htmlspecialchars($msg['message'])); ?></p>
@@ -74,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message'])) {
         <div class="input-bar">
             <form action="chat.php?conversation_id=<?php echo $conversation_id; ?>" method="POST">
                 <textarea name="message" placeholder="Écris ton message..." required></textarea>
-                <button type="submit">Envoyer</button>
+                <button type="submit">➡️</button>
             </form>
         </div>
     </div>
@@ -83,5 +99,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message'])) {
             <button class="conversation-button">🏠</button>
         </a>
     </div>
+
+    <!-- JavaScript pour descendre automatiquement au dernier message -->
+    <script>
+        // Récupérer le conteneur des messages
+        const messageContainer = document.getElementById('messageContainer');
+        if (messageContainer) {
+            // Descendre automatiquement au bas du conteneur
+            messageContainer.scrollTop = messageContainer.scrollHeight;
+        }
+    </script>
 </body>
 </html>
