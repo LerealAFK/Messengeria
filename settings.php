@@ -12,14 +12,12 @@ if (!isset($_SESSION['email'])) {
 $error = "";
 $success = "";
 
-// Fonction pour téléverser une image sur Imgur
 function uploadToImgur($imagePath) {
-    $clientId = '36b0c5c2966a802'; // Remplacez par votre Client ID
+    $clientId = '36b0c5c2966a802'; // Remplacez par votre Client-ID
     $url = 'https://api.imgur.com/3/image';
 
-    // Vérifiez que le fichier existe
     if (!file_exists($imagePath)) {
-        return false;
+        return "Le fichier n'existe pas.";
     }
 
     $imageData = file_get_contents($imagePath);
@@ -38,22 +36,22 @@ function uploadToImgur($imagePath) {
 
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $error = curl_error($ch);
     curl_close($ch);
 
-    // Si la requête échoue
+    // Débogage : Affiche les informations pertinentes
     if ($httpCode !== 200 || !$response) {
-        return false;
+        return "HTTP Code: $httpCode, Erreur cURL: $error, Réponse brute: $response";
     }
 
     $responseData = json_decode($response, true);
 
-    // Vérifiez si les données attendues existent
     if (!isset($responseData['success']) || !$responseData['success']) {
-        return false;
+        return "Erreur API Imgur : " . json_encode($responseData);
     }
 
     if (!isset($responseData['data']['link'])) {
-        return false;
+        return "Aucun lien d'image renvoyé par Imgur.";
     }
 
     return $responseData['data']['link'];
