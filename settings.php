@@ -13,22 +13,50 @@ $error = "";
 $success = "";
 
 // Fonction pour téléverser une image sur Imgur
-function uploadToImgur($filePath) {
-    $clientId = '36b0c5c2966a802'; // Remplacez par votre client ID
-    $imageData = file_get_contents($filePath);
+function uploadToImgur($imagePath) {
+    $clientId = '36b0c5c2966a802'; // Remplacez par votre Client ID
+    $url = 'https://api.imgur.com/3/image';
 
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, 'https://api.imgur.com/3/image');
+    // Vérifiez que le fichier existe
+    if (!file_exists($imagePath)) {
+        return false;
+    }
+
+    $imageData = file_get_contents($imagePath);
+    $headers = [
+        'Authorization: Client-ID ' . $clientId
+    ];
+    $postData = [
+        'image' => base64_encode($imageData)
+    ];
+
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
     curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization: Client-ID ' . $clientId]);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, ['image' => base64_encode($imageData)]);
 
     $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
 
+    // Si la requête échoue
+    if ($httpCode !== 200 || !$response) {
+        return false;
+    }
+
     $responseData = json_decode($response, true);
-    return $responseData['success'] ? $responseData['data']['link'] : false;
+
+    // Vérifiez si les données attendues existent
+    if (!isset($responseData['success']) || !$responseData['success']) {
+        return false;
+    }
+
+    if (!isset($responseData['data']['link'])) {
+        return false;
+    }
+
+    return $responseData['data']['link'];
 }
 
 // Récupérer les informations de l'utilisateur
