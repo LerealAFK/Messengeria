@@ -76,7 +76,7 @@ a:hover {
 .conversation-button {
     position: fixed;
     bottom: 20px;  /* Positionné en bas de la page */
-    right: 20px;    /* Positionné à gauche de la page */
+    left: 20px;    /* Positionné à gauche de la page */
     width: 50px;
     height: 50px;
     border-radius: 50%; /* Forme ronde */
@@ -136,4 +136,10 @@ a:hover {
 
 .settings-button:focus {
     outline: none; /* Pas de contour au focus */
+}
+
+.notification {
+    margin-left: 10px;
+    color: red;
+    font-weight: bold;
 }
