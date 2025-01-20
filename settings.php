@@ -2,14 +2,15 @@
 session_start();
 include('db.php');
 
-$error = "";
-$success = "";
-
 // Vérifier si l'utilisateur est connecté
 if (!isset($_SESSION['email'])) {
     header('Location: login.php');
     exit();
 }
+
+// Variables pour les messages d'erreur ou de succès
+$error = "";
+$success = "";
 
 // Fonction pour téléverser une image sur Imgur
 function uploadToImgur($filePath) {
@@ -29,8 +30,6 @@ function uploadToImgur($filePath) {
     $responseData = json_decode($response, true);
     return $responseData['success'] ? $responseData['data']['link'] : false;
 }
-
-
 
 // Récupérer les informations de l'utilisateur
 $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
@@ -126,10 +125,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <h1>Paramètres de votre compte</h1>
 
         <!-- Messages d'erreur ou de succès -->
-        <?php if ($error): ?>
+        <?php if (isset($error) && $error): ?>
             <div class="error-message"><?php echo htmlspecialchars($error); ?></div>
         <?php endif; ?>
-        <?php if ($success): ?>
+
+        <?php if (isset($success) && $success): ?>
             <div class="success-message"><?php echo htmlspecialchars($success); ?></div>
         <?php endif; ?>
 
@@ -161,20 +161,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <button type="submit">Mettre à jour la photo de profil</button>
         </form>
     </div>
-    <a href="index.php">
-        <button class="conversation-button">🏠</button>
-    </a>
-
-    <script>
-        document.getElementById('profile_picture').addEventListener('change', function () {
-            const maxSize = 2 * 1024 * 1024; // 2 Mo
-            const file = this.files[0];
-
-            if (file && file.size > maxSize) {
-                alert("La taille de l'image ne doit pas dépasser 2 Mo.");
-                this.value = ""; // Réinitialiser le champ
-            }
-        });
-    </script>
 </body>
 </html>
