@@ -14,20 +14,16 @@ $stmt = $pdo->prepare("SELECT * FROM conversations WHERE user1_email = ? OR user
 $stmt->execute([$user_email, $user_email]);
 $conversations = $stmt->fetchAll();
 
-// Préparer les images de profil et les pronoms pour les utilisateurs
-$user_details = [];
+// Préparer les images de profil pour les utilisateurs
+$profile_pictures = [];
 foreach ($conversations as $conv) {
     $other_user_email = $conv['user1_email'] == $user_email ? $conv['user2_email'] : $conv['user1_email'];
-
-    // Récupérer les détails de l'autre utilisateur si non déjà stocké
-    if (!isset($user_details[$other_user_email])) {
-        $stmt = $pdo->prepare("SELECT pronouns, profile_picture FROM users WHERE email = ?");
+    // Récupérer la photo de profil de l'autre utilisateur si elle n'est pas déjà dans le tableau
+    if (!isset($profile_pictures[$other_user_email])) {
+        $stmt = $pdo->prepare("SELECT profile_picture FROM users WHERE email = ?");
         $stmt->execute([$other_user_email]);
         $user = $stmt->fetch();
-        $user_details[$other_user_email] = [
-            'pronouns' => $user['pronouns'] ?? 'Utilisateur',
-            'profile_picture' => $user['profile_picture'] ?? 'default_profile.png' // Image par défaut si aucune photo
-        ];
+        $profile_pictures[$other_user_email] = $user['profile_picture'] ?? 'default_profile.png'; // Image par défaut si aucune photo n'existe
     }
 }
 ?>
@@ -55,21 +51,17 @@ foreach ($conversations as $conv) {
                     // Identifier l'autre utilisateur dans la conversation
                     $other_user_email = $conv['user1_email'] == $user_email ? $conv['user2_email'] : $conv['user1_email'];
 
-                    // Récupérer les détails de l'utilisateur (pronom et photo de profil)
-                    $other_user_details = $user_details[$other_user_email];
+                    // Utiliser la photo de profil récupérée ou l'image par défaut
+                    $profile_picture = $profile_pictures[$other_user_email];
                 ?>
                 <li class="conversation-item">
-                    <img src="<?php echo htmlspecialchars($other_user_details['profile_picture']); ?>" alt="Photo de profil" class="profile-picture">
+                    <img src="<?php echo htmlspecialchars($profile_picture); ?>" alt="Photo de profil" class="profile-picture">
                     <a href="chat.php?conversation_id=<?php echo $conv['id']; ?>">
-                        <?php echo htmlspecialchars($other_user_details['pronouns']); ?>
+                        <?php echo htmlspecialchars($other_user_email); ?>
                     </a>
                 </li>
             <?php endforeach; ?>
         </ul>
     </div>
-    <a href="index.php">
-        <button class="settings-button">🏠</button>
-    </a>
 </body>
 </html>
-
