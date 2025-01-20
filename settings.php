@@ -8,54 +8,38 @@ if (!isset($_SESSION['email'])) {
     exit();
 }
 
-// Variables pour les messages d'erreur ou de succès
-$error = "";
-$success = "";
+$success ='';
+$error = '';
 
-function uploadToImgur($imagePath) {
-    $clientId = '36b0c5c2966a802'; // Remplacez par votre Client-ID
-    $url = 'https://api.imgur.com/3/image';
+// Fonction pour téléverser une image sur le serveur
+function uploadToServer($filePath) {
+    $url = 'https://6060165b-70a6-4e33-90e5-4628dab7b2c8-00-mm8vw3413rgy.worf.replit.dev/index.php'; // URL de votre serveur
+    $cfile = new CURLFile($filePath);
 
-    if (!file_exists($imagePath)) {
-        return "Le fichier n'existe pas.";
-    }
-
-    $imageData = file_get_contents($imagePath);
-    $headers = [
-        'Authorization: Client-ID ' . $clientId
-    ];
     $postData = [
-        'image' => base64_encode($imageData)
+        'image' => $cfile
     ];
 
-    $ch = curl_init($url);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: multipart/form-data']);
 
     $response = curl_exec($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $error = curl_error($ch);
     curl_close($ch);
-
-    // Débogage : Affiche les informations pertinentes
-    if ($httpCode !== 200 || !$response) {
-        return "HTTP Code: $httpCode, Erreur cURL: $error, Réponse brute: $response";
-    }
 
     $responseData = json_decode($response, true);
 
-    if (!isset($responseData['success']) || !$responseData['success']) {
-        return "Erreur API Imgur : " . json_encode($responseData);
+    // Vérifier si le téléversement a réussi et retourner l'URL
+    if (isset($responseData['success']) && $responseData['success']) {
+        return $responseData['url']; // URL de l'image téléchargée
+    } else {
+        return false; // Échec du téléversement
     }
-
-    if (!isset($responseData['data']['link'])) {
-        return "Aucun lien d'image renvoyé par Imgur.";
-    }
-
-    return $responseData['data']['link'];
 }
+
 
 // Récupérer les informations de l'utilisateur
 $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
@@ -81,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
 
         if (in_array($fileType, $allowedTypes)) {
-            $imgurLink = uploadToImgur($fileTmpPath);
+            $imgurLink = uploadToServer($fileTmpPath);
 
             if ($imgurLink) {
                 $stmt = $pdo->prepare("UPDATE users SET profile_picture = ? WHERE email = ?");
@@ -151,11 +135,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <h1>Paramètres de votre compte</h1>
 
         <!-- Messages d'erreur ou de succès -->
-        <?php if (isset($error) && $error): ?>
+        <?php if ($error): ?>
             <div class="error-message"><?php echo htmlspecialchars($error); ?></div>
         <?php endif; ?>
-
-        <?php if (isset($success) && $success): ?>
+        <?php if ($success): ?>
             <div class="success-message"><?php echo htmlspecialchars($success); ?></div>
         <?php endif; ?>
 
@@ -187,5 +170,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <button type="submit">Mettre à jour la photo de profil</button>
         </form>
     </div>
+    <a href="index.php">
+        <button class="conversation-button">🏠</button>
+    </a>
+
+    <script>
+        document.getElementById('profile_picture').addEventListener('change', function () {
+            const maxSize = 2 * 1024 * 1024; // 2 Mo
+            const file = this.files[0];
+
+            if (file && file.size > maxSize) {
+                alert("La taille de l'image ne doit pas dépasser 2 Mo.");
+                this.value = ""; // Réinitialiser le champ
+            }
+        });
+    </script>
 </body>
 </html>
