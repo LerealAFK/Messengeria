@@ -86,20 +86,26 @@ textarea:focus {
 }
 
 .message.current-user {
-    background-color: #b39ddb; /* Vert */
+    background-color: #b39ddb; /* Couleur personnalisée */
     color: white;
     border-radius: 10px;
     padding: 10px;
     margin: 5px 0;
+    max-width: 60%;
+    margin-left: auto;
+    text-align: left;
 }
 
-/* Style des messages envoyés par l'autre utilisateur */
+/* Bulle des messages de l'autre utilisateur */
 .message.other-user {
-    background-color: #95a5a6; /* Rouge */
+    background-color: #95a5a6; /* Couleur personnalisée */
     color: white;
     border-radius: 10px;
     padding: 10px;
     margin: 5px 0;
+    max-width: 60%;
+    margin-right: auto;
+    text-align: left;
 }
 
 /* Personnalisation des images de profil */
