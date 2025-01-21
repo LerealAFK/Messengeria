@@ -185,3 +185,7 @@ a:hover {
     margin-right: 10px; /* Espacement avec le texte */
     border: 2px solid #ddd; /* Bordure esthétique */
 }
+
+.error-message {
+    text-align: center;
+}
