@@ -8,6 +8,48 @@ if (!isset($_SESSION['email'])) {
     exit();
 }
 
+// Vérifier si l'utilisateur est mute
+$stmt = $pdo->prepare("SELECT is_mute FROM users WHERE email = ?");
+$stmt->execute([$_SESSION['email']]);
+$user_status = $stmt->fetch();
+
+if ($user_status && $user_status['is_mute']) {
+    $error_message = "Vous êtes mute et ne pouvez pas envoyer de message.";
+} else {
+    // L'ancien code de vérification et d'envoi des messages ici
+    if (!empty($message)) {
+        $stmt = $pdo->prepare("
+            SELECT message, created_at 
+            FROM messages 
+            WHERE email = ? 
+            ORDER BY created_at DESC 
+            LIMIT 1
+        ");
+        $stmt->execute([$_SESSION['email']]);
+        $last_message = $stmt->fetch();
+
+        // Vérifier si le message est identique ou trop proche dans le temps
+        $can_send = true;
+
+        if ($last_message) {
+            $last_message_time = strtotime($last_message['created_at']);
+            if ($last_message['message'] === $message) {
+                $can_send = false;
+                $error_message = "Vous ne pouvez pas envoyer deux fois le même message.";
+            }
+        }
+
+        // Insérer le message si toutes les conditions sont remplies
+        if ($can_send) {
+            $stmt = $pdo->prepare("INSERT INTO messages (email, message) VALUES (?, ?)");
+            $stmt->execute([$_SESSION['email'], $message]);
+        }
+    } else {
+        $error_message = "Le message ne peut pas être vide.";
+    }
+}
+
+
 // Récupérer les informations de l'utilisateur connecté (uniquement les pronoms)
 $stmt = $pdo->prepare("SELECT pronouns FROM users WHERE email = ?");
 $stmt->execute([$_SESSION['email']]);
@@ -110,11 +152,18 @@ $messages = $stmt->fetchAll();
             <div class="error-message"><?php echo htmlspecialchars($error_message); ?></div>
         <?php endif; ?>
 
-        <!-- Formulaire d'envoi de message public -->
-        <form action="index.php" method="POST">
-            <textarea name="message" placeholder="Écris un message public..." required></textarea>
-            <button type="submit">Envoyer le message</button>""
-        </form>
+        <!-- Formulaire ou message selon l'état de l'utilisateur -->
+        <?php if ($user_status['is_mute']): ?>
+            <div class="error-message">
+                Vous êtes mute et ne pouvez pas envoyer de message.
+            </div>
+        <?php else: ?>
+            <form action="index.php" method="POST">
+                <textarea name="message" placeholder="Écris un message public..." required></textarea>
+                <button type="submit">Envoyer le message</button>
+            </form>
+        <?php endif; ?>
+
 
         <!-- Affichage des messages publics -->
         <h2>Messages publics :</h2>
