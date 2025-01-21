@@ -78,7 +78,9 @@ foreach ($conversations as $conv) {
             <?php endforeach; ?>
         </ul>
     </div>
-
+    <a href="search.php">
+        <button class="search-button">+</button>
+    </a>
     <a href="index.php">
         <button class="conversation-button">🏠</button>
     </a>
