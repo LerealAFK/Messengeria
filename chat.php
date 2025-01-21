@@ -2,6 +2,7 @@
 session_start();
 include('db.php');
 
+// Vérifier si l'utilisateur est connecté
 if (!isset($_SESSION['email'])) {
     header('Location: login.php');
     exit();
@@ -26,6 +27,7 @@ if (!$conversation) {
     exit();
 }
 
+// Marquer les messages comme lus
 $stmt = $pdo->prepare("
     UPDATE private_message 
     SET is_read = 1 
@@ -34,20 +36,10 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute([$conversation_id, $user_email]);
 
-
-// Récupérer les messages de la conversation
-$stmt = $pdo->prepare("SELECT sender_email, message, created_at FROM private_message WHERE conversation_id = ? ORDER BY created_at ASC");
+// Récupérer les messages existants
+$stmt = $pdo->prepare("SELECT id, sender_email, message, created_at FROM private_message WHERE conversation_id = ? ORDER BY created_at ASC");
 $stmt->execute([$conversation_id]);
 $messages = $stmt->fetchAll();
-
-// Ajouter un message à la conversation
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message'])) {
-    $message = $_POST['message'];
-    $stmt = $pdo->prepare("INSERT INTO private_message (conversation_id, sender_email, message) VALUES (?, ?, ?)");
-    $stmt->execute([$conversation_id, $user_email, $message]);
-    header("Location: chat.php?conversation_id=" . $conversation_id); // Rediriger après l'ajout du message
-    exit();
-}
 ?>
 
 <!DOCTYPE html>
@@ -59,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message'])) {
     <link rel="stylesheet" href="styles/chatStyle.css">
     <style>
         .messages {
-            max-height: 70vh; /* Limiter la hauteur pour permettre un défilement */
+            max-height: 70vh;
             overflow-y: auto;
             border: 1px solid #ccc;
             padding: 10px;
@@ -73,23 +65,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message'])) {
 
         <div class="messages" id="messageContainer">
             <?php foreach ($messages as $msg): ?>
-                <?php
-                // Vérifier si le message est de l'utilisateur actuel
-                $is_current_user = $msg['sender_email'] == $_SESSION['email'];
-                ?>
-                <div class="message <?php echo $is_current_user ? 'current-user' : 'other-user'; ?>">
+                <div class="message <?php echo $msg['sender_email'] === $user_email ? 'current-user' : 'other-user'; ?>">
                     <div class="message-header">
-                        <p><strong><?php echo htmlspecialchars($msg['sender_email']); ?></strong> a écrit :</p>
+                        <p><strong><?php echo htmlspecialchars($msg['sender_email']); ?></strong> :</p>
                     </div>
                     <p><?php echo nl2br(htmlspecialchars($msg['message'])); ?></p>
-                    <small>Posté le <?php echo $msg['created_at']; ?></small>
+                    <small><?php echo htmlspecialchars($msg['created_at']); ?></small>
                 </div>
             <?php endforeach; ?>
         </div>
 
         <div class="input-bar">
-            <form action="chat.php?conversation_id=<?php echo $conversation_id; ?>" method="POST">
-                <textarea name="message" placeholder="Écris ton message..." required></textarea>
+            <form id="sendMessageForm" action="chat.php?conversation_id=<?php echo $conversation_id; ?>" method="POST">
+                <textarea name="message" id="messageInput" placeholder="Écris ton message..." required></textarea>
                 <button type="submit">➡️</button>
             </form>
         </div>
@@ -100,12 +88,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message'])) {
         </a>
     </div>
 
-    <!-- JavaScript pour descendre automatiquement au dernier message -->
+    <!-- JavaScript pour le rafraîchissement automatique -->
     <script>
-        // Récupérer le conteneur des messages
+        let lastMessageId = <?php echo end($messages)['id'] ?? 0; ?>; // ID du dernier message récupéré
         const messageContainer = document.getElementById('messageContainer');
+
+        // Fonction pour récupérer les nouveaux messages
+        function fetchNewMessages() {
+            fetch(`fetch_messages.php?conversation_id=<?php echo $conversation_id; ?>&last_message_id=${lastMessageId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        console.error(data.error);
+                        return;
+                    }
+
+                    data.forEach(msg => {
+                        // Créer un nouvel élément HTML pour chaque message
+                        const messageDiv = document.createElement('div');
+                        messageDiv.className = 'message ' + (msg.sender_email === "<?php echo $user_email; ?>" ? 'current-user' : 'other-user');
+                        messageDiv.innerHTML = `
+                            <div class="message-header">
+                                <p><strong>${msg.sender_email}</strong> :</p>
+                            </div>
+                            <p>${msg.message.replace(/\n/g, '<br>')}</p>
+                            <small>${msg.created_at}</small>
+                        `;
+                        messageContainer.appendChild(messageDiv); // Ajouter au conteneur
+                    });
+
+                    // Mettre à jour le dernier message ID
+                    if (data.length > 0) {
+                        lastMessageId = data[data.length - 1].id;
+                        // Faire défiler vers le bas
+                        messageContainer.scrollTop = messageContainer.scrollHeight;
+                    }
+                })
+                .catch(error => console.error('Erreur lors du chargement des messages :', error));
+        }
+
+        // Rafraîchir les messages toutes les 3 secondes
+        setInterval(fetchNewMessages, 3000);
+
+        // Descendre automatiquement au dernier message lors du chargement initial
         if (messageContainer) {
-            // Descendre automatiquement au bas du conteneur
             messageContainer.scrollTop = messageContainer.scrollHeight;
         }
     </script>
