@@ -67,7 +67,12 @@ foreach ($conversations as $conv) {
                     $details = $user_details[$other_user_email];
                 ?>
                 <li class="conversation-item">
-                    <img class="profile-picture" src="<?php echo htmlspecialchars($details['profile_picture']); ?>" alt="Photo de profil">
+                    <img class="profile-picture" 
+                     src="<?php echo !empty($details['profile_picture']) && file_exists('uploads/' . $details['profile_picture']) 
+                         ? 'uploads/' . htmlspecialchars($details['profile_picture']) 
+                         : 'uploads/default_profile.png'; ?>" 
+                     alt="Photo de profil">
+
                     <a href="chat.php?conversation_id=<?php echo $conv['id']; ?>">
                         <?php echo htmlspecialchars($details['pronouns']); ?>
                     </a>
@@ -78,9 +83,7 @@ foreach ($conversations as $conv) {
             <?php endforeach; ?>
         </ul>
     </div>
-    <a href="search.php">
-        <button class="searchButton">+</button>
-    </a>
+
     <a href="index.php">
         <button class="conversation-button">🏠</button>
     </a>
