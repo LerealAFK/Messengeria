@@ -171,7 +171,7 @@ $messages = $stmt->fetchAll();
             <?php foreach ($messages as $msg): ?>
                 <div class="message">
                     <div class="message-header">
-                        <img src="<?php echo htmlspecialchars($msg['profile_picture'] ? 'uploads/' . $msg['profile_picture'] : 'default-profile.png'); ?>" 
+                        <img class="profile-picture" src="<?php echo htmlspecialchars($msg['profile_picture'] ? 'uploads/' . $msg['profile_picture'] : 'default-profile.png'); ?>"
                              alt="Photo de profil" class="profile-picture">
                         <p><strong><?php echo htmlspecialchars($msg['pronouns'] ?: "Anonyme"); ?></strong> a écrit :</p>
                     </div>
