@@ -72,6 +72,10 @@ button {
     transition: background-color 0.3s ease;
 }
 
+.message-container {
+    border: none;
+}
+
 button:hover {
     background-color: #9b59b6;
 }
@@ -80,6 +84,32 @@ button:hover {
 textarea:focus {
     outline: none;
 }
+
+.message.current-user {
+    background-color: #b39ddb; /* Vert */
+    color: white;
+    border-radius: 10px;
+    padding: 10px;
+    margin: 5px 0;
+}
+
+/* Style des messages envoyés par l'autre utilisateur */
+.message.other-user {
+    background-color: #95a5a6; /* Rouge */
+    color: white;
+    border-radius: 10px;
+    padding: 10px;
+    margin: 5px 0;
+}
+
+/* Personnalisation des images de profil */
+.profile-picture {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
 .conversation-button {
     position: fixed;
     bottom: 20px;  /* Positionné en bas de la page */
@@ -106,29 +136,4 @@ textarea:focus {
 
 .conversation-button:focus {
     outline: none;  /* Pas de contour au focus */
-}
-
-.message.current-user {
-    background-color: #b39ddb; /* Vert */
-    color: white;
-    border-radius: 10px;
-    padding: 10px;
-    margin: 5px 0;
-}
-
-/* Style des messages envoyés par l'autre utilisateur */
-.message.other-user {
-    background-color: #95a5a6; /* Rouge */
-    color: white;
-    border-radius: 10px;
-    padding: 10px;
-    margin: 5px 0;
-}
-
-/* Personnalisation des images de profil */
-.profile-picture {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    margin-right: 10px;
 }
