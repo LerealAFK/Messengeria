@@ -92,7 +92,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message'])) {
         <div class="messages" id="messageContainer">
             <?php foreach ($messages as $msg): ?>
                 <div class="message <?php echo $msg['sender_email'] === $user_email ? 'current-user' : 'other-user'; ?>">
-                    <p><strong><?php echo htmlspecialchars($msg['sender_email']); ?> :</strong></p>
                     <p><?php echo nl2br(htmlspecialchars($msg['message'])); ?></p>
                     <small><?php echo htmlspecialchars($msg['created_at']); ?></small>
                 </div>
