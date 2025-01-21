@@ -6,34 +6,11 @@ include('db.php');
 if (!isset($_SESSION['email'])) {
     header('Location: login.php');
     exit();
-}
+} 
 
-$success = '';
-$error = '';
-
-function saveToLocal($file) {
-    $uploadsDir = __DIR__ . '/uploads/'; // Chemin vers le dossier 'uploads'
-    $fileName = basename($file['name']);
-    $fileTmpPath = $file['tmp_name'];
-
-    // Générer un nom de fichier unique pour éviter les conflits
-    $fileExtension = pathinfo($fileName, PATHINFO_EXTENSION);
-    $baseName = pathinfo($fileName, PATHINFO_FILENAME);
-    $uniqueName = $baseName . '_' . uniqid() . '.' . $fileExtension;
-    $filePath = $uploadsDir . $uniqueName;
-
-    // Vérifier si le répertoire 'uploads' existe, sinon le créer
-    if (!is_dir($uploadsDir)) {
-        mkdir($uploadsDir, 0755, true);
-    }
-
-    // Déplacer le fichier téléchargé vers le répertoire 'uploads'
-    if (move_uploaded_file($fileTmpPath, $filePath)) {
-        return $filePath; // Retourne le chemin complet du fichier sauvegardé
-    } else {
-        return false; // Retourne false si le téléchargement échoue
-    }
-}
+// Variables pour les messages d'erreur ou de succès
+$error = "";
+$success = "";
 
 // Récupérer les informations de l'utilisateur
 $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
@@ -52,26 +29,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $success = "Pronoms mis à jour avec succès.";
     }
 
-    // Mise à jour de la photo de profil
     if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] === UPLOAD_ERR_OK) {
-        $file = $_FILES['profile_picture'];
-        $fileType = mime_content_type($file['tmp_name']);
+        $fileTmpPath = $_FILES['profile_picture']['tmp_name'];
+        $fileName = $_FILES['profile_picture']['name'];
+        $fileSize = $_FILES['profile_picture']['size'];
+        $fileType = mime_content_type($fileTmpPath);
+
+        $maxFileSize = 2 * 1024 * 1024; // 2 Mo
         $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
 
-        if (in_array($fileType, $allowedTypes)) {
-            $imgurLink = saveToLocal($file);
+        if ($fileSize > $maxFileSize) {
+            $error = "La taille de l'image ne doit pas dépasser 2 Mo.";
+        } elseif (!in_array($fileType, $allowedTypes)) {
+            $error = "Veuillez télécharger une image valide (JPEG, PNG, GIF).";
+        } else {
+            // Générer un nom unique pour éviter les collisions
+            $fileExtension = pathinfo($fileName, PATHINFO_EXTENSION);
+            $newFileName = uniqid('profile_', true) . '.' . $fileExtension;
 
-            if ($imgurLink) {
+            // Déplacer le fichier dans le dossier uploads/
+            $uploadPath = 'uploads/' . $newFileName;
+            if (move_uploaded_file($fileTmpPath, $uploadPath)) {
+                // Mettre à jour la base de données avec le nom du fichier
                 $stmt = $pdo->prepare("UPDATE users SET profile_picture = ? WHERE email = ?");
-                $stmt->execute([$imgurLink, $_SESSION['email']]);
+                $stmt->execute([$newFileName, $_SESSION['email']]);
                 $success = "Photo de profil mise à jour avec succès.";
             } else {
-                $error = "Échec du téléversement sur le serveur.";
+                $error = "Erreur lors du téléchargement de l'image.";
             }
-        } else {
-            $error = "Veuillez télécharger une image valide (JPEG, PNG, GIF).";
         }
     }
+
+
 
     // Mise à jour de l'email
     if (isset($_POST['new_email'])) {
@@ -101,7 +90,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -120,12 +108,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <!-- Photo de profil -->
         <div class="profile-picture">
-            <?php if ($profile_picture): ?>
+            <?php if ($profile_picture && file_exists($profile_picture)): ?>
                 <img src="<?php echo htmlspecialchars($profile_picture); ?>" alt="Photo de profil" class="profile-img">
             <?php else: ?>
                 <img src="default-avatar.png" alt="Photo de profil par défaut" class="profile-img">
             <?php endif; ?>
         </div>
+
 
         <h1>Paramètres de votre compte</h1>
 
