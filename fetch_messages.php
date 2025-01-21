@@ -2,7 +2,7 @@
 session_start();
 include('db.php');
 
-// Vérifier si l'utilisateur est connecté
+// Vérifier si l'utilisateur est connecté 
 if (!isset($_SESSION['email'])) {
     echo json_encode(['error' => 'Non autorisé']);
     exit();
