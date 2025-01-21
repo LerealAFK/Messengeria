@@ -46,20 +46,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message'])) {
         $last_message = $stmt->fetch();
 
         // Vérifier si le message est identique ou trop proche dans le temps
-        $min_time_gap = 1; // Délai minimum en secondes
         $can_send = true;
 
         if ($last_message) {
             $last_message_time = strtotime($last_message['created_at']); // Convertir le timestamp en format UNIX
-            $time_diff = time() - $last_message_time;
-
             if ($last_message['message'] === $message) {
                 $can_send = false;
                 $error_message = "Vous ne pouvez pas envoyer deux fois le même message.";
             } 
-            
         }
-
 
         // Insérer le message si toutes les conditions sont remplies
         if ($can_send) {
@@ -118,7 +113,7 @@ $messages = $stmt->fetchAll();
         <!-- Formulaire d'envoi de message public -->
         <form action="index.php" method="POST">
             <textarea name="message" placeholder="Écris un message public..." required></textarea>
-            <button type="submit">Envoyer le message</button>
+            <button type="submit">Envoyer le message</button>""
         </form>
 
         <!-- Affichage des messages publics -->
@@ -127,7 +122,7 @@ $messages = $stmt->fetchAll();
             <?php foreach ($messages as $msg): ?>
                 <div class="message">
                     <div class="message-header">
-                        <img src="<?php echo htmlspecialchars($msg['profile_picture'] ?: 'default-profile.png'); ?>" 
+                        <img src="<?php echo htmlspecialchars($msg['profile_picture'] ? 'uploads/' . $msg['profile_picture'] : 'default-profile.png'); ?>" 
                              alt="Photo de profil" class="profile-picture">
                         <p><strong><?php echo htmlspecialchars($msg['pronouns'] ?: "Anonyme"); ?></strong> a écrit :</p>
                     </div>
