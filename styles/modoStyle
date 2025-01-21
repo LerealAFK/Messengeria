@@ -1,0 +1,119 @@
+/* Style général */
+body {
+    margin: 0;
+    font-family: 'Arial', sans-serif;
+    background: #121212; /* Fond noir futuriste */
+    color: #e0e0e0; /* Texte légèrement gris */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+/* Conteneur principal */
+.container {
+    width: 90%;
+    max-width: 800px;
+    background: #1e1e1e; /* Fond légèrement différent du body */
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+}
+
+/* Titre principal */
+h1 {
+    text-align: center;
+    color: #a29bfe; /* Violet clair */
+    font-size: 2.2em;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+}
+
+/* Message de retour */
+.message {
+    background: #3a3a3a; /* Fond pour les messages de retour */
+    color: #fff;
+    padding: 10px;
+    border-radius: 5px;
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+/* Table des utilisateurs */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+table th, table td {
+    text-align: left;
+    padding: 10px;
+    border-bottom: 1px solid #333;
+}
+
+table th {
+    color: #a29bfe;
+    text-transform: uppercase;
+    font-size: 0.9em;
+    letter-spacing: 1px;
+}
+
+table td {
+    color: #e0e0e0;
+}
+
+/* Boutons */
+button {
+    padding: 10px 15px;
+    font-size: 0.9em;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+}
+
+.mute-button {
+    background: #ff6b6b; /* Rouge pour le bouton "Mute" */
+    color: #fff;
+}
+
+.mute-button:hover {
+    background: #ff5252; /* Rouge plus clair au survol */
+}
+
+.unmute-button {
+    background: #6bc6ff; /* Bleu clair pour "Unmute" */
+    color: #fff;
+}
+
+.unmute-button:hover {
+    background: #4aaeff; /* Bleu plus clair au survol */
+}
+
+/* Table hover */
+table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .container {
+        padding: 15px;
+    }
+
+    table th, table td {
+        font-size: 0.85em;
+        padding: 8px;
+    }
+
+    button {
+        font-size: 0.8em;
+        padding: 8px 12px;
+    }
+}
