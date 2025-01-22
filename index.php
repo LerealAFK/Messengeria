@@ -8,6 +8,10 @@ if (!isset($_SESSION['email'])) {
     exit();
 }
 
+$stmt = $pdo->prepare("UPDATE users SET last_active = NOW() WHERE email = ?");
+$stmt->execute([$_SESSION['email']]);
+
+
 // Déterminer le canal actuel
 $current_channel = isset($_GET['channel']) ? $_GET['channel'] : 'general';
 
