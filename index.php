@@ -106,9 +106,7 @@ $unread_count = $stmt->fetch()['unread_count'];
             </a>
         </div>
         <a href="settings.php">
-            <button class="settings-button">
-                ⚙️ 
-            </button>
+            <button class="settings-button">⚙️</button>
         </a>
 
         <!-- Message de bienvenue -->
@@ -119,11 +117,6 @@ $unread_count = $stmt->fetch()['unread_count'];
             <a href="index.php?channel=general" class="<?php echo $current_channel == 'general' ? 'active' : ''; ?>"># Général</a>
             <a href="index.php?channel=suggestion" class="<?php echo $current_channel == 'suggestion' ? 'active' : ''; ?>"># Suggestion</a>
         </div>
-
-        <!-- Afficher un message d'erreur s'il y en a -->
-        <?php if (!empty($error_message)): ?>
-            <div class="error-message"><?php echo htmlspecialchars($error_message); ?></div>
-        <?php endif; ?>
 
         <!-- Formulaire ou message selon l'état de l'utilisateur -->
         <?php if ($is_mute): ?>
@@ -143,8 +136,7 @@ $unread_count = $stmt->fetch()['unread_count'];
             <?php foreach ($messages as $msg): ?>
                 <div class="message">
                     <div class="message-header">
-                        <img class="profile-picture" src="<?php echo htmlspecialchars($msg['profile_picture'] ? 'uploads/' . $msg['profile_picture'] : 'default-profile.png'); ?>"
-                             alt="Photo de profil">
+                        <img class="profile-picture" src="<?php echo htmlspecialchars($msg['profile_picture'] ? 'uploads/' . $msg['profile_picture'] : 'default-profile.png'); ?>" alt="Photo de profil">
                         <p><strong><?php echo htmlspecialchars($msg['pronouns'] ?: "Anonyme"); ?></strong> a écrit :</p>
                     </div>
                     <p><?php echo nl2br(htmlspecialchars($msg['message'])); ?></p>
@@ -153,5 +145,27 @@ $unread_count = $stmt->fetch()['unread_count'];
             <?php endforeach; ?>
         </div>
     </div>
+
+    <!-- Div pour le tutoriel -->
+    <div id="tutorial" class="tutorial">
+        <div class="tutorial-step" data-step="1">
+            <h2>Bienvenue sur Messengeria !</h2>
+            <p>Voici où vous pouvez accéder à vos conversations. Cliquez sur 💬 pour voir vos messages privés.</p>
+            <button class="next-button">Suivant</button>
+        </div>
+        <div class="tutorial-step" data-step="2">
+            <h2>Paramètres</h2>
+            <p>Accédez aux paramètres en cliquant sur ⚙️ pour personnaliser votre expérience.</p>
+            <button class="next-button">Suivant</button>
+        </div>
+        <div class="tutorial-step" data-step="3">
+            <h2>Canaux de discussion</h2>
+            <p>Utilisez les onglets pour changer de canal de discussion. Amusez-vous bien !</p>
+            <button class="close-button">Terminer</button>
+        </div>
+    </div>
+
+    <script src="scripts/tutorial.js"></script>
 </body>
+</html>
 </html>
