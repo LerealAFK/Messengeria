@@ -12,6 +12,8 @@ if (!isset($_SESSION['email'])) {
 $error = "";
 $success = "";
 
+$user_email = $_SESSION['email'];
+
 // Récupérer les informations de l'utilisateur
 $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
 $stmt->execute([$_SESSION['email']]);
