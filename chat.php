@@ -10,6 +10,10 @@ if (!isset($_SESSION['email'])) {
 
 $user_email = $_SESSION['email'];
 
+// Mettre à jour le statut de l'utilisateur connecté à l'ouverture de la page
+$stmt = $pdo->prepare("UPDATE users SET is_online = TRUE WHERE email = ?");
+$stmt->execute([$user_email]);
+
 // Vérification des paramètres GET
 if (!isset($_GET['conversation_id'])) {
     echo "Conversation non spécifiée.";
