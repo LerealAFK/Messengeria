@@ -23,7 +23,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($user && password_verify($password, $user['password'])) {
         // Connexion réussie : démarrer une session et rediriger
         $_SESSION['email'] = $email;
-        header('Location: index.php');
+
+        // Ajout d'une redirection avec JavaScript pour manipuler localStorage
+        echo "
+            <script>
+                localStorage.setItem('userEmail', '" . addslashes($email) . "');
+                window.location.href = 'index.php';
+            </script>
+        ";
         exit();
     } else {
         // Message d'erreur pour email/mot de passe incorrect
@@ -46,12 +53,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php if (!empty($error)): ?>
             <p style="color: red;"><?php echo htmlspecialchars($error); ?></p>
         <?php endif; ?>
-        <form action="login.php" method="POST">
-            <input type="email" name="email" placeholder="Email" required>
+        <form action="login.php" method="POST" onsubmit="saveToLocalStorage(event)">
+            <input type="email" name="email" id="email" placeholder="Email" required>
             <input type="password" name="password" placeholder="Mot de passe" required>
             <button type="submit">Se connecter</button>
         </form>
         <p>Pas encore de compte ? <a href="register.php">Inscrivez-vous ici</a>.</p>
     </div>
+
+    <script>
+        function saveToLocalStorage(event) {
+            // Lire l'e-mail avant l'envoi du formulaire
+            const email = document.getElementById('email').value;
+            localStorage.setItem('userEmail', email);
+        }
+    </script>
 </body>
 </html>
