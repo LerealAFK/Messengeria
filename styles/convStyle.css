@@ -110,10 +110,10 @@ a:hover {
     border: 2px solid #ddd; /* Bordure esthétique */
 }
 
-.searchButton {
+.settings-button {
     position: fixed;
     bottom: 20px;  /* Positionné en bas de la page */
-    right: 20px;    /* Positionné à gauche de la page */
+    left: 20px;    /* Positionné à gauche de la page */
     width: 50px;
     height: 50px;
     border-radius: 50%; /* Forme ronde */
@@ -130,11 +130,11 @@ a:hover {
     text-align: center;
 }
 
-.searchButton:hover {
+.settings-button:hover {
     background-color: #9b59b6; /* Change légèrement la couleur au survol */
 }
 
-.searchButton:focus {
+.settings-button:focus {
     outline: none; /* Pas de contour au focus */
 }
 
@@ -143,3 +143,29 @@ a:hover {
     color: red;
     font-weight: bold;
 }
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+}
+
+.status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    position: absolute;
+    left: 40px;
+    top: 5px;
+}
+
+.status-indicator.online {
+    background-color: green;
+}
+
+.status-indicator.offline {
+    background-color: gray;
+}
+
+
