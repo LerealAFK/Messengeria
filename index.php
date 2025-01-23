@@ -8,9 +8,11 @@ if (!isset($_SESSION['email'])) {
     exit();
 }
 
-$stmt = $pdo->prepare("UPDATE users SET last_active = NOW() WHERE email = ?");
-$stmt->execute([$_SESSION['email']]);
 
+
+// Mettre à jour le statut de l'utilisateur connecté à l'ouverture de la page
+$stmt = $pdo->prepare("UPDATE users SET is_online = TRUE WHERE email = ?");
+$stmt->execute([$user_email]);
 
 // Déterminer le canal actuel
 $current_channel = isset($_GET['channel']) ? $_GET['channel'] : 'general';
