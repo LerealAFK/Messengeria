@@ -8,7 +8,7 @@ if (!isset($_SESSION['email'])) {
     exit();
 }
 
-
+$user_email = $_SESSION['email'];
 
 // Mettre à jour le statut de l'utilisateur connecté à l'ouverture de la page
 $stmt = $pdo->prepare("UPDATE users SET is_online = TRUE WHERE email = ?");
