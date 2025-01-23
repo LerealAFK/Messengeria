@@ -18,6 +18,9 @@ $stmt->execute([$_SESSION['email']]);
 $user = $stmt->fetch();
 $profile_picture = $user['profile_picture'] ?? null;
 $pronouns = $user['pronouns'] ?? "";
+// Mettre à jour le statut de l'utilisateur connecté à l'ouverture de la page
+$stmt = $pdo->prepare("UPDATE users SET is_online = TRUE WHERE email = ?");
+$stmt->execute([$user_email]);
 
 // Gérer les soumissions POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
