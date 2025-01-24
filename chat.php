@@ -10,7 +10,7 @@ if (!isset($_SESSION['email'])) {
 
 $user_email = $_SESSION['email'];
 
-// Mettre à jour le statut de l'utilisateur connecté à l'ouverture de la page
+// Mettre à jour le statut de l'utilisateur connecté
 $stmt = $pdo->prepare("UPDATE users SET is_online = TRUE WHERE email = ?");
 $stmt->execute([$user_email]);
 
@@ -20,7 +20,7 @@ if (!isset($_GET['conversation_id'])) {
     exit();
 }
 
-$conversation_id = (int) $_GET['conversation_id'];
+$conversation_id = (int)$_GET['conversation_id'];
 
 // Vérification que la conversation existe
 $stmt = $pdo->prepare("SELECT * FROM conversations WHERE id = ?");
@@ -42,21 +42,54 @@ $stmt = $pdo->prepare("
 $stmt->execute([$conversation_id, $user_email]);
 
 // Récupération des messages existants
-$stmt = $pdo->prepare("SELECT id, sender_email, message, created_at FROM private_message WHERE conversation_id = ? ORDER BY created_at ASC");
+$stmt = $pdo->prepare("SELECT id, sender_email, message, video_path, created_at 
+                       FROM private_message 
+                       WHERE conversation_id = ? 
+                       ORDER BY created_at ASC");
 $stmt->execute([$conversation_id]);
 $messages = $stmt->fetchAll();
 
-// Envoi d'un nouveau message
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message'])) {
-    $message = trim($_POST['message']);
-    if (!empty($message)) {
-        $stmt = $pdo->prepare("INSERT INTO private_message (conversation_id, sender_email, message) VALUES (?, ?, ?)");
-        $stmt->execute([$conversation_id, $user_email, $message]);
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $message = trim($_POST['message']) ?: null;
+    $videoPath = null;
+
+    // Création des dossiers si nécessaire
+    if (!is_dir('uploads/videos')) {
+        mkdir('uploads/videos', 0777, true);
     }
-    header("Location: chat.php?conversation_id=" . $conversation_id); // Rediriger après l'ajout du message
+
+    // Gestion de l'upload de la vidéo
+    if (isset($_FILES['video']) && $_FILES['video']['error'] === UPLOAD_ERR_OK) {
+        $videoTmp = $_FILES['video']['tmp_name'];
+        $videoExt = strtolower(pathinfo($_FILES['video']['name'], PATHINFO_EXTENSION));
+        $allowedVideoExt = ['mp4', 'mov', 'avi'];
+
+        if (in_array($videoExt, $allowedVideoExt)) {
+            $videoName = uniqid() . "." . $videoExt;
+            $videoPath = 'uploads/videos/' . $videoName;
+            if (!move_uploaded_file($videoTmp, $videoPath)) {
+                echo "Erreur lors de l'upload de la vidéo.";
+                exit();
+            }
+        } else {
+            echo "Extension de vidéo non autorisée.";
+            exit();
+        }
+    }
+
+    // Insérer le message avec vidéo
+    $stmt = $pdo->prepare("
+        INSERT INTO private_message (conversation_id, sender_email, message, video_path) 
+        VALUES (?, ?, ?, ?)
+    ");
+    $stmt->execute([$conversation_id, $user_email, $message, $videoPath]);
+
+    header("Location: chat.php?conversation_id=" . $conversation_id);
     exit();
 }
 ?>
+
+
 
 <!DOCTYPE html>
 <html lang="fr">
@@ -96,18 +129,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message'])) {
         <div class="messages" id="messageContainer">
             <?php foreach ($messages as $msg): ?>
                 <div class="message <?php echo $msg['sender_email'] === $user_email ? 'current-user' : 'other-user'; ?>">
-                    <p><?php echo nl2br(htmlspecialchars($msg['message'])); ?></p>
-                    <small><?php echo htmlspecialchars($msg['created_at']); ?></small>
+                    
+            <?php if (!empty($msg['message'])): ?>
+                <p><?php echo nl2br(htmlspecialchars($msg['message'])); ?></p>
+            <?php endif; ?>
+
+            <?php if (!empty($msg['video_path'])): ?>
+                <video width="320" height="240" controls>
+                    <source src="<?php echo htmlspecialchars($msg['video_path']); ?>" type="video/mp4">
+                    Votre navigateur ne supporte pas la lecture des vidéos.
+                </video>
+            <?php endif; ?>
+
+            <?php if (!empty($msg['thumbnail_path'])): ?>
+                <img src="<?php echo htmlspecialchars($msg['thumbnail_path']); ?>" alt="Miniature" style="max-width: 100px; height: auto;">
+            <?php endif; ?>
+
+            <small><?php echo htmlspecialchars($msg['created_at']); ?></small>
+
                 </div>
             <?php endforeach; ?>
         </div>
 
-        <div class="input-bar">
-            <form id="sendMessageForm" action="chat.php?conversation_id=<?php echo $conversation_id; ?>" method="POST">
-                <textarea name="message" id="messageInput" placeholder="Écris ton message..." required></textarea>
-                <button type="submit">-></button>
-            </form>
-        </div>
+        <form id="sendMessageForm" action="chat.php?conversation_id=<?php echo $conversation_id; ?>" method="POST" enctype="multipart/form-data">
+            <textarea name="message" id="messageInput" placeholder="Écris ton message..."></textarea>
+            <input type="file" name="video" class="file-button" accept="video/*">
+            <button type="submit">Envoyer</button>
+        </form>
+
     </div>
     <div style="margin: 20px 0;">
         <a href="index.php">
