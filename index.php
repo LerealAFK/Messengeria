@@ -7,12 +7,12 @@ if (!isset($_SESSION['email'])) {
     header('Location: login.php');
     exit();
 }
-
 $user_email = $_SESSION['email'];
 
 // Mettre à jour le statut de l'utilisateur connecté à l'ouverture de la page
 $stmt = $pdo->prepare("UPDATE users SET is_online = TRUE WHERE email = ?");
 $stmt->execute([$user_email]);
+
 
 // Déterminer le canal actuel
 $current_channel = isset($_GET['channel']) ? $_GET['channel'] : 'general';
@@ -167,6 +167,11 @@ $unread_count = $stmt->fetch()['unread_count'];
         <div class="tutorial-step" data-step="3">
             <h2>Canaux de discussion</h2>
             <p>Utilisez les onglets pour changer de canal de discussion. Amusez-vous bien !</p>
+            <button class="close-button">Terminer</button>
+        </div>
+        <div class="tutorial-step" data-step="4">
+            <h2>Videos</h2>
+            <p>Envoyez des videos avec vos amis, attention a bien envoyer un message lier.</p>
             <button class="close-button">Terminer</button>
         </div>
     </div>
