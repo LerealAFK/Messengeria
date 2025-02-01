@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: messengeria
+    env: docker
+    buildCommand: docker build -t myapp .
+    startCommand: docker run -p 80:80 myapp
+    plan: free
