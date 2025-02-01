@@ -153,7 +153,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <form id="sendMessageForm" action="chat.php?conversation_id=<?php echo $conversation_id; ?>" method="POST" enctype="multipart/form-data">
             <textarea name="message" id="messageInput" placeholder="Écris ton message..."></textarea>
-            <input type="file" name="video" class="file-button" accept="video/*">
+
             <button type="submit">Envoyer</button>
         </form>
 
