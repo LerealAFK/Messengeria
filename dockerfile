@@ -1,4 +1,4 @@
-# Utilisation d'une image PHP de base
+# Utilisation d'une image officielle PHP avec Apache
 FROM php:8.1-apache
 
 # Installation des extensions PHP nécessaires
@@ -7,21 +7,18 @@ RUN apt-get update && apt-get install -y \
     unzip \
     && docker-php-ext-install pdo pdo_mysql zip
 
-# Copie des fichiers du projet
-COPY . /var/www/html/
-
-# Ajustement des permissions
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html
-
 # Activation du module Apache rewrite
 RUN a2enmod rewrite
 
-# Configuration d'Apache
-COPY .htaccess /var/www/html/.htaccess
+# Copie des fichiers du projet
+COPY . /var/www/html/
+
+# Correction des permissions
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html
 
 # Port exposé
 EXPOSE 80
 
-# Commande de démarrage
+# Démarrage d'Apache
 CMD ["apache2-foreground"]
