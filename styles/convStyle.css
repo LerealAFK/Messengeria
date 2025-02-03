@@ -110,10 +110,10 @@ a:hover {
     border: 2px solid #ddd; /* Bordure esthétique */
 }
 
-.settings-button {
+.search-button {
     position: fixed;
     bottom: 20px;  /* Positionné en bas de la page */
-    left: 20px;    /* Positionné à gauche de la page */
+    right: 20px;    /* Positionné à gauche de la page */
     width: 50px;
     height: 50px;
     border-radius: 50%; /* Forme ronde */
@@ -130,11 +130,11 @@ a:hover {
     text-align: center;
 }
 
-.settings-button:hover {
+.search-button:hover {
     background-color: #9b59b6; /* Change légèrement la couleur au survol */
 }
 
-.settings-button:focus {
+.search-button:focus {
     outline: none; /* Pas de contour au focus */
 }
 
