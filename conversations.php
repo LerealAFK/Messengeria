@@ -103,9 +103,6 @@ try {
     <a href="index.php">
         <button class="conversation-button">🏠</button>
     </a>
-    <a href="search.php">
-        <button class="search-button">+</button>
-    </a>
     <script>
          // Met à jour le statut en ligne toutes les 2 minutes
          setInterval(() => {
@@ -126,7 +123,6 @@ try {
         window.addEventListener('beforeunload', () => {
             navigator.sendBeacon('set_offline.php'); // Utilisation de sendBeacon pour requête rapide
         });
-    </script>
     </script>
 </body>
 </html>
