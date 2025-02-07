@@ -103,6 +103,9 @@ try {
     <a href="index.php">
         <button class="conversation-button">🏠</button>
     </a>
+    <a href="search.php">
+        <button class="search-button">+</button>
+    </a>
     <script>
          // Met à jour le statut en ligne toutes les 2 minutes
          setInterval(() => {
