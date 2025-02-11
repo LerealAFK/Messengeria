@@ -1,42 +1,71 @@
 <?php
 session_start();
 
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 // Inclure la base de données
 include('db.php');
 
-// Si l'utilisateur est déjà connecté via une session, le rediriger vers index.php
+
+// Si l'utilisateur est déjà connecté, rediriger
 if (isset($_SESSION['email'])) {
     header('Location: index.php');
     exit();
 }
 
-// Traiter la soumission du formulaire de connexion
+// Vérifier si le formulaire a été soumis
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = $_POST['email'];
-    $password = $_POST['password'];
+    $email = $_POST['email'] ?? null;
+    $password = $_POST['password'] ?? null;
 
-    // Vérifier si l'utilisateur existe dans la base de données
-    $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
-    $stmt->execute([$email]);
-    $user = $stmt->fetch();
+    if ($email && $password) {
+        // Récupérer l'adresse IP
+        $user_ip = $_SERVER['REMOTE_ADDR'];
 
-    if ($user && password_verify($password, $user['password'])) {
-        // Connexion réussie : démarrer une session et rediriger
-        $_SESSION['email'] = $email;
+        // Vérifier le nombre de comptes créés avec cette IP
+        $stmt = $pdo->prepare("SELECT COUNT(DISTINCT email) FROM users WHERE last_ip = ?");
+        $stmt->execute([$user_ip]);
+        $accountCount = $stmt->fetchColumn();
 
-        // Ajout d'une redirection avec JavaScript pour manipuler localStorage
-        echo "
-            <script>
-                localStorage.setItem('userEmail', '" . addslashes($email) . "');
-                window.location.href = 'index.php';
-            </script>
-        ";
-        exit();
+        // Vérifier si l'utilisateur s'est déjà connecté depuis cette IP
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE email = ? AND last_ip = ?");
+        $stmt->execute([$email, $user_ip]);
+        $userExistsOnIP = $stmt->fetchColumn() > 0;
+
+        // Bloquer si la limite est atteinte et que ce compte n'a jamais été utilisé sur cette IP
+        if ($accountCount >= 3 && !$userExistsOnIP) {
+            $error = "Vous avez atteint la limite de 3 comptes par IP.";
+        } else {
+            // Vérifier l'utilisateur
+            $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
+            $stmt->execute([$email]);
+            $user = $stmt->fetch();
+
+            if ($user && password_verify($password, $user['password'])) {
+                $_SESSION['email'] = $email;
+
+                // Mettre à jour l'IP
+                $stmt = $pdo->prepare("UPDATE users SET last_ip = ? WHERE email = ?");
+                $stmt->execute([$user_ip, $email]);
+
+                echo "
+                    <script>
+                        localStorage.setItem('userEmail', '" . addslashes($email) . "');
+                        window.location.href = 'index.php';
+                    </script>
+                ";
+                exit();
+            } else {
+                $error = "Email ou mot de passe incorrect.";
+            }
+        }
     } else {
-        // Message d'erreur pour email/mot de passe incorrect
-        $error = "Email ou mot de passe incorrect.";
+        $error = "Veuillez remplir tous les champs.";
     }
 }
+
+
 ?>
 
 <!DOCTYPE html>
