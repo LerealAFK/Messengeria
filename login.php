@@ -89,6 +89,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </form>
         <p>Pas encore de compte ? <a href="register.php">Inscrivez-vous ici</a>.</p>
     </div>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3246646337802566"
+     crossorigin="anonymous"></script>
 
     <script>
         function saveToLocalStorage(event) {
