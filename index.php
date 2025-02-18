@@ -175,7 +175,8 @@ $unread_count = $stmt->fetch()['unread_count'];
             <button class="close-button">Terminer</button>
         </div>
     </div>
-
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3246646337802566"
+     crossorigin="anonymous"></script>
     <script src="scripts/tutorial.js"></script>
 </body>
 </html>
