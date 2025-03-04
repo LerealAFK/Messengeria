@@ -116,7 +116,7 @@ $unread_count = $stmt->fetch()['unread_count'];
             </a>
         </div>
         <div class="groupes-button">
-            <button class="groupes-conv-button"><a href="groupes">👥</a></button>
+            <button class="groupes-conv-button"><a href="groupes.php">👥</a></button>
             
         </div>
         <a href="settings.php">
