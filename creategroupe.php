@@ -30,25 +30,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         "envoyer_messages" => "on"
     ]);
 
-    $permissionsMembre = json_encode([
-        "envoyer_messages" => "on"
-    ]);
-
     // Insérer le rôle "Admin"
-    $stmt = $pdo->prepare("INSERT INTO groupe_roles (groupe_id, nom, couleur, permissions) VALUES (?, 'Admin', '#FF0000', ?)");
-    $stmt->execute([$groupe_id, $permissionsAdmin]);
+    $stmt = $pdo->prepare("INSERT INTO groupe_membres (groupe_id, user_id, role) VALUES (?, ?, ?)");
+    $stmt->execute([$groupe_id, $user_id, 'admin']);
     $role_id_admin = $pdo->lastInsertId();
 
     // Envoyer un message de bienvenue automatique
-    $message_bienvenue = "Bienvenue sur le groupe $nom. Vous avez bien créé le groupe, amusez-vous bien !";
+    $message_bienvenue = "Bienvenue sur le groupe $nom. Ceci est un message par défaut. L'admin peut accéder aux paramètres sur l'icône ⚙️, pour gérer les membres (et les rôles mais c'est en beta). Amusez-vous bien !";
     $stmt = $pdo->prepare("INSERT INTO groupe_messages (groupe_id, user_id, message, created_at) VALUES (?, ?, ?, NOW())");
     $stmt->execute([$groupe_id, $user_id, $message_bienvenue]);
 
-
-    // Insérer le rôle "Membre"
-    $stmt = $pdo->prepare("INSERT INTO groupe_roles (groupe_id, nom, couleur, permissions) VALUES (?, 'Membre', '#808080', ?)");
-    $stmt->execute([$groupe_id, $permissionsMembre]);
-    $role_id_membre = $pdo->lastInsertId();
+    // Supprimer l'insertion du rôle "Membre" pour le créateur du groupe
 
     // Ajouter l'utilisateur créateur avec le rôle d'Admin
     $stmt = $pdo->prepare("INSERT INTO groupe_membres (groupe_id, user_id, role_id) VALUES (?, ?, ?)");
