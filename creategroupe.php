@@ -16,9 +16,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $user = $stmt->fetch();
     $user_id = $user['id'];
 
-    $stmt = $pdo->prepare("INSERT INTO groupe_roles (groupe_id, nom, couleur, permissions) VALUES (?, 'Membre', '#808080', ?)");
+    $stmt = $pdo->prepare("INSERT INTO groupe_roles (id, nom, couleur, permissions) VALUES (?, 'Membre', '#808080', ?)");
     $permissionsMembre = json_encode(["envoyer_messages" => true]);
-    $stmt->execute([$groupe_id, $permissionsMembre]);
+    $stmt->execute([$id, $permissionsMembre]);
 
     // Récupérer l'ID du rôle "Membre" pour l’assigner aux nouveaux membres
     $role_id_membre = $pdo->lastInsertId();
@@ -26,10 +26,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $stmt = $pdo->prepare("INSERT INTO groupes (nom, admin_id) VALUES (?, ?)");
     $stmt->execute([$nom, $user_id]);
-    $groupe_id = $pdo->lastInsertId();
+    $id = $pdo->lastInsertId();
 
-    $stmt = $pdo->prepare("INSERT INTO groupe_membres (groupe_id, user_id, role) VALUES (?, ?, 'admin')");
-    $stmt->execute([$groupe_id, $user_id]);
+    $stmt = $pdo->prepare("INSERT INTO groupe_membres (id, user_id, role) VALUES (?, ?, 'admin')");
+    $stmt->execute([$id, $user_id]);
 
     header("Location: groupes.php");
     exit();
