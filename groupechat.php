@@ -55,6 +55,13 @@ WHERE gm.user_id = ? AND gm.groupe_id = ?");
 $stmt->execute([$user_id, $groupe_id]);
 $role = $stmt->fetch();
 
+$user = $stmt->fetch();
+if (!$user) {
+    echo json_encode(["error" => "Utilisateur non trouvé"]);
+    exit();
+}
+$user_id = $user['id'];
+
 $permissions = json_decode($role['permissions'], true);
 
 if (!empty($permissions['supprimer_messages'])) {
