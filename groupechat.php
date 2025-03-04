@@ -3,11 +3,13 @@ session_start();
 include('db.php');
 
 if (!isset($_SESSION['email'])) {
+    header('Content-Type: application/json');
     echo json_encode(["error" => "Accès interdit"]);
     exit();
 }
 
 if (!isset($_GET['id'])) {
+    header('Content-Type: application/json');
     echo json_encode(["error" => "ID de groupe manquant"]);
     exit();
 }
@@ -27,7 +29,7 @@ $messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Vérification si des messages existent
 if (!$messages) {
-    $messages = [["message" => "Aucun message pour l'instant."]];
+    $messages = [["message" => "Aucun message pour l'instant.", "pronouns" => "Système"]];
 }
 
 // Récupérer les permissions du groupe
@@ -40,26 +42,25 @@ $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
 // Vérification si un rôle "admin" existe
 if (!$result) {
+    header('Content-Type: application/json');
     echo json_encode(["error" => "Aucune permission trouvée pour ce groupe"]);
     exit();
 }
 
 // Vérification avant d'utiliser json_decode()
-$jsonString = $result['permissions'] ?? '';
-if (!$jsonString) {
-    echo json_encode(["error" => "Données JSON manquantes"]);
-    exit();
-}
-
+$jsonString = $result['permissions'] ?? '{}';
 $permissions = json_decode($jsonString, true);
+
 if (json_last_error() !== JSON_ERROR_NONE) {
+    header('Content-Type: application/json');
     echo json_encode(["error" => "Erreur JSON"]);
     exit();
 }
 
-echo json_encode(["messages" => $messages, "permissions" => $permissions]);
-?>
+// Stocker les données JSON pour utilisation dans le HTML
+$jsonData = json_encode(["messages" => $messages, "permissions" => $permissions]);
 
+?>
 
 <!DOCTYPE html>
 <html lang="fr">
@@ -81,23 +82,27 @@ echo json_encode(["messages" => $messages, "permissions" => $permissions]);
             <?php endforeach; ?>
         </div>
 
-        <form method="POST">
-            <input type="text" name="message" placeholder="Écrire un message..." required>
-            <button type="submit">Envoyer</button>
-        </form>
+        <?php if (!empty($permissions['envoyer_messages'])): ?>
+            <form method="POST" action="envoyer_message.php">
+                <input type="hidden" name="groupe_id" value="<?= $groupe_id ?>">
+                <input type="text" name="message" placeholder="Écrire un message..." required>
+                <button type="submit">Envoyer</button>
+            </form>
+        <?php else: ?>
+            <p>Vous n'avez pas la permission d'envoyer des messages.</p>
+        <?php endif; ?>
 
-        <!-- Bouton pour accéder à la gestion du groupe -->
         <a href="groupmanage.php?id=<?= $groupe_id ?>" class="manage-button">⚙️</a>
         <a href="groupes.php">◀️</a>
     </div>
 
     <script>
-        let lastMessageId = <?php echo end($messages)['id'] ?? 0; ?>;
+        let lastMessageId = <?= end($messages)['id'] ?? 0; ?>;
         const messageContainer = document.getElementById('messageContainer');
 
         // Fonction pour récupérer les nouveaux messages
         function fetchNewMessages() {
-            fetch(`live_messages.php?groupe_id=<?php echo $groupe_id; ?>&last_message_id=${lastMessageId}`)
+            fetch(`live_messages.php?groupe_id=<?= $groupe_id; ?>&last_message_id=${lastMessageId}`)
                 .then(response => response.json())
                 .then(data => {
                     if (Array.isArray(data)) {
