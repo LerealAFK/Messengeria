@@ -90,11 +90,7 @@ $stmt = $pdo->prepare("
 $stmt->execute(['email' => $_SESSION['email']]);
 $unread_count = $stmt->fetch()['unread_count'];
 
-// Trouver le dernier message reçu
-$last_message_id = 0;
-if (!empty($messages)) {
-    $last_message_id = end($messages)['id'];
-}
+
 ?>
 
 
