@@ -2,67 +2,64 @@
 session_start();
 include('db.php');
 
-
-
-if (!isset($_GET['id'])) {
-    echo json_encode(["error" => "ID du groupe manquant"]);
-    exit();
-}
-
-$groupe_id = $_GET['id'];
-
-// Vérification de l'appartenance au groupe
-$email = $_SESSION['email'];
-$stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
-$stmt->execute([$email]);
-$user = $stmt->fetch();
-$user_id = $user['id'];
-
-$stmt = $pdo->prepare("SELECT * FROM groupe_membres WHERE groupe_id = ? AND user_id = ?");
-$stmt->execute([$groupe_id, $user_id]);
-if ($stmt->rowCount() == 0) {
+if (!isset($_SESSION['email'])) {
     echo json_encode(["error" => "Accès interdit"]);
     exit();
 }
 
-// Récupérer les messages existants
-$stmt = $pdo->prepare("SELECT gm.message, u.pronouns, gm.created_at 
-                       FROM groupe_messages gm 
-                       JOIN users u ON gm.user_id = u.id 
-                       WHERE gm.groupe_id = ? 
-                       ORDER BY gm.created_at ASC");
+if (!isset($_GET['id'])) {
+    echo json_encode(["error" => "ID de groupe manquant"]);
+    exit();
+}
+
+$groupe_id = (int) $_GET['id']; // Sécurisation de l'ID
+
+// Récupérer les messages du groupe
+$stmt = $pdo->prepare("
+    SELECT gm.message, u.pronouns, gm.created_at, gm.id 
+    FROM groupe_messages gm 
+    JOIN users u ON gm.user_id = u.id 
+    WHERE gm.groupe_id = ? 
+    ORDER BY gm.created_at ASC
+");
 $stmt->execute([$groupe_id]);
 $messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+// Vérification si des messages existent
 if (!$messages) {
-    echo json_encode(["error" => "Aucun message trouvé"]);
+    $messages = [["message" => "Aucun message pour l'instant."]];
+}
+
+// Récupérer les permissions du groupe
+$stmt = $pdo->prepare("
+    SELECT permissions FROM groupe_roles 
+    WHERE groupe_id = ? AND nom = 'admin'
+");
+$stmt->execute([$groupe_id]);
+$result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+// Vérification si un rôle "admin" existe
+if (!$result) {
+    echo json_encode(["error" => "Aucune permission trouvée pour ce groupe"]);
     exit();
 }
 
-
-
-if ($_SERVER["REQUEST_METHOD"] == "POST" && !empty($_POST['message'])) {
-    $message = trim($_POST['message']);
-    $stmt = $pdo->prepare("INSERT INTO groupe_messages (groupe_id, user_id, message) VALUES (?, ?, ?)");
-    $stmt->execute([$groupe_id, $user_id, $message]);
-    header("Location: groupechat.php?id=" . $groupe_id);
+// Vérification avant d'utiliser json_decode()
+$jsonString = $result['permissions'] ?? '';
+if (!$jsonString) {
+    echo json_encode(["error" => "Données JSON manquantes"]);
     exit();
 }
 
-$stmt = $pdo->prepare("SELECT gr.permissions FROM groupe_roles gr 
-JOIN groupe_membres gm ON gr.id = gm.role_id 
-WHERE gm.user_id = ? AND gm.groupe_id = ?");
-$stmt->execute([$user_id, $groupe_id]);
-$role = $stmt->fetch();
-
-$permissions = json_decode($role['permissions'], true);
-
-if (!empty($permissions['supprimer_messages'])) {
-    echo '<button onclick="supprimerMessage()">Supprimer</button>';
+$permissions = json_decode($jsonString, true);
+if (json_last_error() !== JSON_ERROR_NONE) {
+    echo json_encode(["error" => "Erreur JSON"]);
+    exit();
 }
 
-
+echo json_encode(["messages" => $messages, "permissions" => $permissions]);
 ?>
+
 
 <!DOCTYPE html>
 <html lang="fr">
