@@ -89,7 +89,15 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute(['email' => $_SESSION['email']]);
 $unread_count = $stmt->fetch()['unread_count'];
+
+// Trouver le dernier message reçu
+$last_message_id = 0;
+if (!empty($messages)) {
+    $last_message_id = end($messages)['id'];
+}
 ?>
+
+
 
 <!DOCTYPE html>
 <html lang="fr">
@@ -110,6 +118,10 @@ $unread_count = $stmt->fetch()['unread_count'];
                     <?php endif; ?>
                 </button>
             </a>
+        </div>
+        <div class="groupes-button">
+            <button class="groupes-conv-button"><a href="groupes">👥</a></button>
+            
         </div>
         <a href="settings.php">
             <button class="settings-button">⚙️</button>
@@ -175,9 +187,50 @@ $unread_count = $stmt->fetch()['unread_count'];
             <button class="close-button">Terminer</button>
         </div>
     </div>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3246646337802566"
-     crossorigin="anonymous"></script>
+
     <script src="scripts/tutorial.js"></script>
+    
+    <script>
+    let lastMessageId = 0;  // ID du dernier message reçu
+
+    function updateMessages() {
+        const conversationId = <?php echo json_encode($conversation_id); ?>;
+
+        fetch(`update.php?conversation_id=${conversationId}&last_message_id=${lastMessageId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.error(data.error);
+                    return;
+                }
+
+                const messagesContainer = document.querySelector(".messages");
+
+                data.forEach(msg => {
+                    lastMessageId = Math.max(lastMessageId, msg.id); // Mettre à jour l'ID du dernier message
+
+                    // Création du message
+                    const messageElement = document.createElement("div");
+                    messageElement.classList.add("message");
+                    messageElement.innerHTML = `
+                        <p><strong>${msg.sender_email}</strong>: ${msg.message}</p>
+                        <small>${msg.created_at}</small>
+                    `;
+
+                    messagesContainer.appendChild(messageElement);
+                });
+
+                // Faire défiler vers le bas pour voir les nouveaux messages
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            })
+            .catch(error => console.error("Erreur lors de la récupération des messages:", error));
+    }
+
+    // Rafraîchir toutes les 2 secondes
+    setInterval(updateMessages, 2000);
+</script>
+    
+
 </body>
 </html>
 </html>
