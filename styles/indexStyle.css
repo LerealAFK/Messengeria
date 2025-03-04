@@ -239,3 +239,32 @@ a:hover {
 .next-button:hover, .close-button:hover {
     background-color: #9b59b6;
 }
+
+.groupes-conv-button {
+    position: fixed;
+    bottom: 20px;  
+    left: 50%; /* Centre le bouton */
+    transform: translateX(-50%); /* Ajuste pour qu'il soit bien centré */
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: #8e44ad;
+    color: white;
+    font-size: 24px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    transition: background-color 0.3s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.groupes-conv-button:hover {
+    background-color: #9b59b6;
+}
+
+.groupes-conv-button:focus {
+    outline: none;
+}
