@@ -1,0 +1,115 @@
+/* Reset général */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background-color: #0e0e10;
+    color: #e3e3e3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+/* Conteneur principal */
+.container {
+    width: 90%;
+    max-width: 600px;
+    background: #1a1a1d;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(147, 112, 219, 0.5);
+    text-align: center;
+}
+
+/* Boutons */
+button {
+    background: linear-gradient(45deg, #6a0dad, #9400d3);
+    color: #fff;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+button:hover {
+    background: linear-gradient(45deg, #9400d3, #6a0dad);
+}
+
+/* Liens */
+a {
+    color: #a855f7;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+a:hover {
+    color: #d8b4fe;
+}
+
+/* Formulaires */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+input {
+    background: #28282b;
+    border: 1px solid #6a0dad;
+    padding: 10px;
+    border-radius: 5px;
+    color: #fff;
+}
+
+input:focus {
+    outline: none;
+    border-color: #9400d3;
+}
+
+/* Liste des groupes */
+.group-list {
+    list-style: none;
+    margin-top: 20px;
+}
+
+.group-list li {
+    background: #222;
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 5px;
+    transition: 0.3s;
+}
+
+.group-list li:hover {
+    background: #333;
+}
+
+/* Messages */
+.chat-box {
+    background: #18181b;
+    padding: 10px;
+    border-radius: 5px;
+    height: 300px;
+    overflow-y: auto;
+    margin-top: 10px;
+    border: 1px solid #6a0dad;
+}
+
+.chat-message {
+    background: #28282b;
+    padding: 8px;
+    margin: 5px 0;
+    border-radius: 5px;
+}
+
+.chat-message b {
+    color: #a855f7;
+}
