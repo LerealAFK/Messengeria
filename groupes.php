@@ -14,8 +14,9 @@ $stmt->execute([$email]);
 $user = $stmt->fetch();
 $user_id = $user['id'];
 
-$stmt = $pdo->prepare("SELECT g.id, g.nom FROM groupes g 
+$stmt = $pdo->prepare("SELECT DISTINCT g.id, g.nom FROM groupes g 
     JOIN groupe_membres gm ON g.id = gm.groupe_id WHERE gm.user_id = ?");
+
 $stmt->execute([$user_id]);
 $groupes = $stmt->fetchAll();
 ?>
