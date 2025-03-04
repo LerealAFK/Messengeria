@@ -17,22 +17,42 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $user = $stmt->fetch();
     $user_id = $user['id'];
 
-    // Insérer le groupe en premier
+    // Insérer le groupe
     $stmt = $pdo->prepare("INSERT INTO groupes (nom, admin_id) VALUES (?, ?)");
     $stmt->execute([$nom, $user_id]);
-    $groupe_id = $pdo->lastInsertId(); // Récupérer l'ID du groupe nouvellement créé
+    $groupe_id = $pdo->lastInsertId();
 
-    // Maintenant, on peut insérer le rôle "Membre"
+    // Définir les permissions pour les rôles
+    $permissionsAdmin = json_encode([
+        "gerer_membres" => "on",
+        "epingler_messages" => "on",
+        "changer_description" => "on",
+        "envoyer_messages" => "on"
+    ]);
+
+    $permissionsMembre = json_encode([
+        "envoyer_messages" => "on"
+    ]);
+
+    // Insérer le rôle "Admin"
+    $stmt = $pdo->prepare("INSERT INTO groupe_roles (groupe_id, nom, couleur, permissions) VALUES (?, 'Admin', '#FF0000', ?)");
+    $stmt->execute([$groupe_id, $permissionsAdmin]);
+    $role_id_admin = $pdo->lastInsertId();
+
+    // Envoyer un message de bienvenue automatique
+    $message_bienvenue = "Bienvenue sur le groupe $nom. Vous avez bien créé le groupe, amusez-vous bien !";
+    $stmt = $pdo->prepare("INSERT INTO groupe_messages (groupe_id, user_id, message, created_at) VALUES (?, ?, ?, NOW())");
+    $stmt->execute([$groupe_id, $user_id, $message_bienvenue]);
+
+
+    // Insérer le rôle "Membre"
     $stmt = $pdo->prepare("INSERT INTO groupe_roles (groupe_id, nom, couleur, permissions) VALUES (?, 'Membre', '#808080', ?)");
-    $permissionsMembre = json_encode(["envoyer_messages" => true]);
     $stmt->execute([$groupe_id, $permissionsMembre]);
-
-    // Récupérer l'ID du rôle "Membre"
     $role_id_membre = $pdo->lastInsertId();
 
-    // Ajouter l'utilisateur comme membre avec le rôle d'admin
-    $stmt = $pdo->prepare("INSERT INTO groupe_membres (groupe_id, user_id, role) VALUES (?, ?, 'admin')");
-    $stmt->execute([$groupe_id, $user_id]);
+    // Ajouter l'utilisateur créateur avec le rôle d'Admin
+    $stmt = $pdo->prepare("INSERT INTO groupe_membres (groupe_id, user_id, role_id) VALUES (?, ?, ?)");
+    $stmt->execute([$groupe_id, $user_id, $role_id_admin]);
 
     header("Location: groupes.php");
     exit();
