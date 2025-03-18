@@ -2,31 +2,45 @@
 session_start();
 include('db.php');
 
-if (!isset($_SESSION['email'])) {
+
+
+if (!isset($_GET['id'])) {
+    echo json_encode(["error" => "ID du groupe manquant"]);
+    exit();
+}
+
+$groupe_id = $_GET['id'];
+
+// Vérification de l'appartenance au groupe
+$email = $_SESSION['email'];
+$stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
+$stmt->execute([$email]);
+$user = $stmt->fetch();
+$user_id = $user['id'];
+
+$stmt = $pdo->prepare("SELECT * FROM groupe_membres WHERE groupe_id = ? AND user_id = ?");
+$stmt->execute([$groupe_id, $user_id]);
+if ($stmt->rowCount() == 0) {
     echo json_encode(["error" => "Accès interdit"]);
     exit();
 }
 
-if (!isset($_GET['id'])) {
-    echo json_encode(["error" => "ID de groupe manquant"]);
+// Récupérer les messages existants
+$stmt = $pdo->prepare("SELECT gm.message, u.pronouns, gm.created_at 
+                       FROM groupe_messages gm 
+                       JOIN users u ON gm.user_id = u.id 
+                       WHERE gm.groupe_id = ? 
+                       ORDER BY gm.created_at ASC");
+$stmt->execute([$groupe_id]);
+$messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+if (!$messages) {
+    echo json_encode(["error" => "Aucun message trouvé"]);
     exit();
 }
 
-$groupe_id = (int) $_GET['id']; // Sécurisation de l'ID
 
-// Récupérer l'ID de l'utilisateur connecté
-$stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
-$stmt->execute([$_SESSION['email']]);
-$user = $stmt->fetch();
 
-if (!$user) {
-    echo json_encode(["error" => "Utilisateur non trouvé"]);
-    exit();
-}
-
-$user_id = $user['id'];
-
-// Envoyer un message si un formulaire est soumis
 if ($_SERVER["REQUEST_METHOD"] == "POST" && !empty($_POST['message'])) {
     $message = trim($_POST['message']);
     $stmt = $pdo->prepare("INSERT INTO groupe_messages (groupe_id, user_id, message) VALUES (?, ?, ?)");
@@ -35,21 +49,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && !empty($_POST['message'])) {
     exit();
 }
 
-// Récupérer les messages du groupe
-$stmt = $pdo->prepare("
-    SELECT gm.message, u.pronouns, gm.created_at, gm.id 
-    FROM groupe_messages gm 
-    JOIN users u ON gm.user_id = u.id 
-    WHERE gm.groupe_id = ? 
-    ORDER BY gm.created_at ASC
-");
-$stmt->execute([$groupe_id]);
-$messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$stmt = $pdo->prepare("SELECT gr.permissions FROM groupe_roles gr 
+JOIN groupe_membres gm ON gr.id = gm.role_id 
+WHERE gm.user_id = ? AND gm.groupe_id = ?");
+$stmt->execute([$user_id, $groupe_id]);
+$role = $stmt->fetch();
 
-// Vérification si des messages existent
-if (!$messages) {
-    $messages = [["message" => "Aucun message pour l'instant."]];
+$permissions = json_decode($role['permissions'], true);
+
+if (!empty($permissions['supprimer_messages'])) {
+    echo '<button onclick="supprimerMessage()">Supprimer</button>';
 }
+
 
 ?>
 
@@ -67,8 +78,8 @@ if (!$messages) {
         <div class="chat-box" id="messageContainer">
             <?php foreach ($messages as $msg): ?>
                 <div class="chat-message">
-                    <b><?= htmlspecialchars($msg['pronouns'] ?? 'Utilisateur') ?>:</b> <?= nl2br(htmlspecialchars($msg['message'])) ?>
-                    <br><small><?= htmlspecialchars($msg['created_at'] ?? '') ?></small>
+                    <b><?= htmlspecialchars($msg['pronouns']) ?>:</b> <?= nl2br(htmlspecialchars($msg['message'])) ?>
+                    <br><small><?= htmlspecialchars($msg['created_at']) ?></small>
                 </div>
             <?php endforeach; ?>
         </div>
@@ -115,6 +126,8 @@ if (!$messages) {
 
         // Rafraîchir les messages toutes les 3 secondes
         setInterval(fetchNewMessages, 3000);
+        // Descendre automatiquement au dernier message au chargement
+        messageContainer.scrollTop = messageContainer.scrollHeight;
     </script>
 </body>
 </html>
