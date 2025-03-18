@@ -90,7 +90,11 @@ $stmt = $pdo->prepare("
 $stmt->execute(['email' => $_SESSION['email']]);
 $unread_count = $stmt->fetch()['unread_count'];
 
-
+// Trouver le dernier message reçu
+$last_message_id = 0;
+if (!empty($messages)) {
+    $last_message_id = end($messages)['id'];
+}
 ?>
 
 
@@ -130,6 +134,7 @@ $unread_count = $stmt->fetch()['unread_count'];
         <div class="channels">
             <a href="index.php?channel=general" class="<?php echo $current_channel == 'general' ? 'active' : ''; ?>"># Général</a>
             <a href="index.php?channel=suggestion" class="<?php echo $current_channel == 'suggestion' ? 'active' : ''; ?>"># Suggestion</a>
+            <a href="index.php?channel=patchnote" class="<?php echo $current_channel == 'patchnote' ? 'active' : ''; ?>"># Patchnote </a>             
         </div>
 
         <!-- Formulaire ou message selon l'état de l'utilisateur -->
