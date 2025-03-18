@@ -7,7 +7,6 @@ ini_set('display_errors', 1);
 // Inclure la base de données
 include('db.php');
 
-
 // Si l'utilisateur est déjà connecté, rediriger
 if (isset($_SESSION['email'])) {
     header('Location: index.php');
@@ -20,15 +19,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'] ?? null;
 
     if ($email && $password) {
-        
-        
-            // Vérifier l'utilisateur
+        // Vérifier l'utilisateur
         $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
         $stmt->execute([$email]);
         $user = $stmt->fetch();
 
         if ($user && password_verify($password, $user['password'])) {
-            $_SESSION['email'] = $email
+            $_SESSION['email'] = $email; // Ajout du point-virgule
             echo "
                 <script>
                     localStorage.setItem('userEmail', '" . addslashes($email) . "');
@@ -39,14 +36,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $error = "Email ou mot de passe incorrect.";
         }
-    
-
     } else {
         $error = "Veuillez remplir tous les champs.";
     }
 }
-
-
 ?>
 
 <!DOCTYPE html>
@@ -73,7 +66,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <script>
         function saveToLocalStorage(event) {
-            // Lire l'e-mail avant l'envoi du formulaire
             const email = document.getElementById('email').value;
             localStorage.setItem('userEmail', email);
         }
