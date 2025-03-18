@@ -25,6 +25,10 @@ if ($stmt->rowCount() == 0) {
     exit();
 }
 
+$stmt = $pdo->prepare("UPDATE groupe_messages SET is_read = 1 WHERE groupe_id = ? AND user_id != ?");
+$stmt->execute([$groupe_id, $user_id]);
+
+
 // Récupérer les messages existants
 $stmt = $pdo->prepare("SELECT gm.message, u.pronouns, gm.created_at 
                        FROM groupe_messages gm 
@@ -98,36 +102,41 @@ if (!empty($permissions['supprimer_messages'])) {
         let lastMessageId = <?php echo end($messages)['id'] ?? 0; ?>;
         const messageContainer = document.getElementById('messageContainer');
 
-        // Fonction pour récupérer les nouveaux messages
         function fetchNewMessages() {
             fetch(`live_messages.php?groupe_id=<?php echo $groupe_id; ?>&last_message_id=${lastMessageId}`)
                 .then(response => response.json())
                 .then(data => {
                     if (Array.isArray(data)) {
-                        data.forEach(msg => {
+                     data.forEach(msg => {
+                         // Vérifier si le message existe déjà en cherchant son ID
+                         if (!document.querySelector(`#msg-${msg.id}`)) {
                             const messageDiv = document.createElement('div');
                             messageDiv.className = 'chat-message';
-                            messageDiv.innerHTML = `
-                                <b>${msg.pronouns}:</b> ${msg.message.replace(/\n/g, '<br>')}
-                                <br><small>${msg.created_at}</small>
-                            `;
-                            messageContainer.appendChild(messageDiv);
-                        });
-
-                        // Mettre à jour le dernier ID de message
-                        if (data.length > 0) {
-                            lastMessageId = data[data.length - 1].id;
-                            messageContainer.scrollTop = messageContainer.scrollHeight;
-                        }
+                        messageDiv.id = `msg-${msg.id}`; // ID unique pour éviter les doublons
+                        messageDiv.innerHTML = `
+                            <b>${msg.pronouns}:</b> ${msg.message.replace(/\n/g, '<br>')}
+                            <br><small>${msg.created_at}</small>
+                        `;
+                        messageContainer.appendChild(messageDiv);
                     }
-                })
-                .catch(error => console.error('Erreur :', error));
-        }
+                });
 
-        // Rafraîchir les messages toutes les 3 secondes
-        setInterval(fetchNewMessages, 3000);
-        // Descendre automatiquement au dernier message au chargement
-        messageContainer.scrollTop = messageContainer.scrollHeight;
+                // Mettre à jour l'ID du dernier message
+                if (data.length > 0) {
+                    lastMessageId = data[data.length - 1].id;
+                    messageContainer.scrollTop = messageContainer.scrollHeight;
+                }
+            }
+        })
+        .catch(error => console.error('Erreur :', error));
+}
+
+// Rafraîchir les messages toutes les 3 secondes
+setInterval(fetchNewMessages, 3000);
+
+// Descendre automatiquement au dernier message au chargement
+messageContainer.scrollTop = messageContainer.scrollHeight;
+
     </script>
 </body>
 </html>
