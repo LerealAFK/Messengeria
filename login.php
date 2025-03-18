@@ -20,46 +20,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'] ?? null;
 
     if ($email && $password) {
-        // Récupérer l'adresse IP
-        $user_ip = $_SERVER['REMOTE_ADDR'];
-
-        // Vérifier le nombre de comptes créés avec cette IP
-        $stmt = $pdo->prepare("SELECT COUNT(DISTINCT email) FROM users WHERE last_ip = ?");
-        $stmt->execute([$user_ip]);
-        $accountCount = $stmt->fetchColumn();
-
-        // Vérifier si l'utilisateur s'est déjà connecté depuis cette IP
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE email = ? AND last_ip = ?");
-        $stmt->execute([$email, $user_ip]);
-        $userExistsOnIP = $stmt->fetchColumn() > 0;
-
-        // Bloquer si la limite est atteinte et que ce compte n'a jamais été utilisé sur cette IP
-        if ($accountCount >= 3 && !$userExistsOnIP) {
-            $error = "Vous avez atteint la limite de 3 comptes par IP.";
-        } else {
+        
+        
             // Vérifier l'utilisateur
-            $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
-            $stmt->execute([$email]);
-            $user = $stmt->fetch();
+        $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
+        $stmt->execute([$email]);
+        $user = $stmt->fetch();
 
-            if ($user && password_verify($password, $user['password'])) {
-                $_SESSION['email'] = $email;
-
-                // Mettre à jour l'IP
-                $stmt = $pdo->prepare("UPDATE users SET last_ip = ? WHERE email = ?");
-                $stmt->execute([$user_ip, $email]);
-
-                echo "
-                    <script>
-                        localStorage.setItem('userEmail', '" . addslashes($email) . "');
-                        window.location.href = 'index.php';
-                    </script>
-                ";
-                exit();
-            } else {
-                $error = "Email ou mot de passe incorrect.";
-            }
+        if ($user && password_verify($password, $user['password'])) {
+            $_SESSION['email'] = $email
+            echo "
+                <script>
+                    localStorage.setItem('userEmail', '" . addslashes($email) . "');
+                    window.location.href = 'index.php';
+                </script>
+            ";
+            exit();
+        } else {
+            $error = "Email ou mot de passe incorrect.";
         }
+    
+
     } else {
         $error = "Veuillez remplir tous les champs.";
     }
@@ -89,8 +70,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </form>
         <p>Pas encore de compte ? <a href="register.php">Inscrivez-vous ici</a>.</p>
     </div>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3246646337802566"
-     crossorigin="anonymous"></script>
 
     <script>
         function saveToLocalStorage(event) {
