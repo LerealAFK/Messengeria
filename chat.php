@@ -42,7 +42,7 @@ $stmt = $pdo->prepare("
 $stmt->execute([$conversation_id, $user_email]);
 
 // Récupération des messages existants
-$stmt = $pdo->prepare("SELECT id, sender_email, message, video_path, created_at 
+$stmt = $pdo->prepare("SELECT id, sender_email, message, video_path, created_at, is_read 
                        FROM private_message 
                        WHERE conversation_id = ? 
                        ORDER BY created_at ASC");
