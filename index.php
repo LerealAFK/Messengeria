@@ -111,7 +111,7 @@ if (!empty($messages)) {
     <div class="container">
         <!-- Bouton pour accéder aux conversations -->
         <div style="margin: 20px 0;">
-            <a href="chat/conversations.php">
+            <a href="conversations.php">
                 <button class="conversation-button">
                     💬 <?php if ($unread_count > 0): ?>
                         <span class="notification"><?php echo $unread_count; ?></span>
