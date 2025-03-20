@@ -166,6 +166,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <button class="conversation-button">🏠</button>
         </a>
     </div>
+    <script>
+        const sendMessageForm = document.getElementById('sendMessageForm');
+        const messageInput = document.getElementById('messageInput');
+
+    // Écouter l'événement 'keypress' sur le champ de texte
+        messageInput.addEventListener('keypress', function(event) {    
+        // Vérifier si la touche pressée est 'Entrée' (keyCode 13)
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault(); // Empêcher l'ajout de nouvelle ligne
+            sendMessageForm.submit(); // Soumettre le formulair
+        }
+        });
+    </script>
+
 
     <script>
         let lastMessageId = <?php echo end($messages)['id'] ?? 0; ?>; // ID du dernier message
