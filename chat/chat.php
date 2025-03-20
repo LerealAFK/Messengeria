@@ -4,7 +4,7 @@ include('../db.php');
 
 // Vérification que l'utilisateur est connecté
 if (!isset($_SESSION['email'])) {
-    header('Location: login.php');
+    header('Location: ../login.php');
     exit();
 }
 
@@ -159,7 +159,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     </div>
     <div style="margin: 20px 0;">
-        <a href="index.php">
+        <a href="../index.php">
             <button class="conversation-button">🏠</button>
         </a>
     </div>
