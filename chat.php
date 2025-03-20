@@ -127,9 +127,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <h1>Conversation avec <?php echo htmlspecialchars($conversation['user1_email'] == $user_email ? $conversation['user2_email'] : $conversation['user1_email']); ?></h1>
 
         <div class="messages" id="messageContainer">
-            <?php foreach ($messages as $msg): ?>
-                <div class="message <?php echo $msg['sender_email'] === $user_email ? 'current-user' : 'other-user'; ?>">
-                    
+    <?php foreach ($messages as $msg): ?>
+        <div class="message <?php echo $msg['sender_email'] === $user_email ? 'current-user' : 'other-user'; ?>">
+            
             <?php if (!empty($msg['message'])): ?>
                 <p><?php echo nl2br(htmlspecialchars($msg['message'])); ?></p>
             <?php endif; ?>
@@ -141,16 +141,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </video>
             <?php endif; ?>
 
-            <?php if (!empty($msg['thumbnail_path'])): ?>
-                <img src="<?php echo htmlspecialchars($msg['thumbnail_path']); ?>" alt="Miniature" style="max-width: 100px; height: auto;">
-            <?php endif; ?>
-
             <small><?php echo htmlspecialchars($msg['created_at']); ?></small>
 
-                </div>
-            <?php endforeach; ?>
-        </div>
+            <!-- Affichage du statut du message -->
+            <?php if ($msg['is_read'] == 1): ?>
+                <small style="color: green;">Message vu</small>
+            <?php else: ?>
+                <small style="color: red;">Message non vu</small>
+            <?php endif; ?>
 
+        </div>
+    <?php endforeach; ?>
+</div>
+    
         <form id="sendMessageForm" action="chat.php?conversation_id=<?php echo $conversation_id; ?>" method="POST" enctype="multipart/form-data">
             <textarea name="message" id="messageInput" placeholder="Écris ton message..."></textarea>
 
