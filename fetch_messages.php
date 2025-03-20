@@ -1,6 +1,6 @@
 <?php
 session_start();
-include('db.php');
+include('../db.php');
 
 // Vérification que l'utilisateur est connecté
 if (!isset($_SESSION['email'])) {
