@@ -1,9 +1,9 @@
 <?php
 session_start();
-include('db.php');
+include('../db.php');
 
 if (!isset($_SESSION['email'])) {
-    header('Location: login.php');
+    header('Location: ../login.php');
     exit();
 }
 
