@@ -6,13 +6,13 @@ document.addEventListener("DOMContentLoaded", function () {
             .then(response => response.json())
             .then(messages => {
                 if (messages.length > 0) {
-                    messages.forEach(msg => showNotification(msg.sender_email, msg.message));
+                    messages.forEach(msg => showNotification(msg.pronouns, msg.message, msg.link));
                 }
             })
             .catch(error => console.error("Erreur de notification :", error));
     }
 
-    function showNotification(sender, message) {
+    function showNotification(pronouns, message, link) {
         // Vérifier si une notification existe déjà
         let existingNotification = document.querySelector(".notification-banner");
         if (existingNotification) existingNotification.remove();
@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", function () {
         // Créer la bannière
         let notification = document.createElement("div");
         notification.className = "notification-banner show";
-        notification.innerHTML = `<strong>${sender} :</strong> ${message}`;
+        notification.innerHTML = `<strong>${pronouns} :</strong> ${message}`;
 
         // Jouer le son
         notificationSound.play().catch(err => console.error("Son non joué :", err));
@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Redirection au clic
         notification.addEventListener("click", () => {
-            window.location.href = `/chat.php?conversations=${encodeURIComponent(sender)}`;
+            window.location.href = link;
         });
 
         // Supprimer après 5 secondes
