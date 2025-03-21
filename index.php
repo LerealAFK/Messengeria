@@ -158,7 +158,8 @@ if (!empty($messages)) {
             <?php foreach ($messages as $msg): ?>
                 <div class="message">
                     <div class="message-header">
-                        <img class="profile-picture" src="<?php echo htmlspecialchars($msg['profile_picture'] ? 'uploads/' . $msg['profile_picture'] : 'default-profile.png'); ?>" alt="Photo de profil">
+                    <img class="profile-picture" src="<?php echo htmlspecialchars($details['profile_picture'] ? 'uploads/' . $details['profile_picture'] : 'default-profile.png'); ?>" alt="Photo de profil">
+                        
                         <p><strong><?php echo htmlspecialchars($msg['pronouns'] ?: "Anonyme"); ?></strong> a écrit :</p>
                     </div>
                     <p><?php echo nl2br(htmlspecialchars($msg['message'])); ?></p>
