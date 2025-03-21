@@ -93,7 +93,7 @@ $unread_count = $stmt->fetch()['unread_count'];
 // Trouver le dernier message reçu
 $last_message_id = 0;
 if (!empty($messages)) {
-    
+    $last_message_id = end($messages)['id'];
 }
 ?>
 
@@ -106,6 +106,9 @@ if (!empty($messages)) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="styles/indexStyle.css">
     <title>Accueil - Messengeria</title>
+    <link rel="stylesheet" href="styles/notifications.css">
+    <script src="scripts/notifications.js" defer></script>
+
 </head>
 <body>
     <div class="container">
