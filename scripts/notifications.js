@@ -23,7 +23,11 @@ document.addEventListener("DOMContentLoaded", function () {
         notification.innerHTML = `<strong>${pronouns} :</strong> ${message}`;
 
         // Jouer le son
-        notificationSound.play().catch(err => console.error("Son non joué :", err));
+        // Jouer le son si activé
+        if (isSoundEnabled) {
+            notificationSound.play().catch(err => console.error("Son non joué :", err));
+        }
+        
 
         // Ajouter au body
         document.body.appendChild(notification);
