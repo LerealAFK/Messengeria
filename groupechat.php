@@ -75,6 +75,8 @@ if (!empty($permissions['supprimer_messages'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat du groupe</title>
     <link rel="stylesheet" href="styles/groupeStyle.css">
+    <link rel="stylesheet" href="styles/notifications.css">
+    <script src="scripts/notifications.js" defer></script>
 </head>
 <body>
     <div class="container">
