@@ -24,9 +24,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Jouer le son
         // Jouer le son si activé
-        if (isSoundEnabled) {
-            notificationSound.play().catch(err => console.error("Son non joué :", err));
-        }
+       
+        notificationSound.play().catch(err => console.error("Son non joué :", err));
+        
         
 
         // Ajouter au body
