@@ -129,31 +129,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <h1>Conversation avec <?php echo htmlspecialchars($conversation['user1_email'] == $user_email ? $conversation['user2_email'] : $conversation['user1_email']); ?></h1>
 
         <div class="messages" id="messageContainer">
-    <?php foreach ($messages as $msg): ?>
-        <div class="message <?php echo $msg['sender_email'] === $user_email ? 'current-user' : 'other-user'; ?>">
-            
-            <?php if (!empty($msg['message'])): ?>
-                <p><?php echo nl2br(htmlspecialchars($msg['message'])); ?></p>
-            <?php endif; ?>
+        <?php foreach ($messages as $msg): ?>
+    <div class="message <?php echo $msg['sender_email'] === $user_email ? 'current-user' : 'other-user'; ?>">
+        
+        <?php if (!empty($msg['message'])): ?>
+            <p><?php echo nl2br(htmlspecialchars($msg['message'])); ?></p>
+        <?php endif; ?>
 
-            <?php if (!empty($msg['video_path'])): ?>
-                <video width="320" height="240" controls>
-                    <source src="<?php echo htmlspecialchars($msg['video_path']); ?>" type="video/mp4">
-                    Votre navigateur ne supporte pas la lecture des vidéos.
-                </video>
-            <?php endif; ?>
+        <?php if (!empty($msg['video_path'])): ?>
+            <video width="320" height="240" controls>
+                <source src="<?php echo htmlspecialchars($msg['video_path']); ?>" type="video/mp4">
+                Votre navigateur ne supporte pas la lecture des vidéos.
+            </video>
+        <?php endif; ?>
 
-            <small><?php echo htmlspecialchars($msg['created_at']); ?></small>
+        <small><?php echo htmlspecialchars($msg['created_at']); ?></small>
 
-            <!-- Affichage du statut du message -->
+        <!-- Afficher le statut du message SEULEMENT si c'est l'utilisateur qui l'a envoyé -->
+        <?php if ($msg['sender_email'] === $user_email): ?>
             <?php if ($msg['is_read'] == 1): ?>
                 <small style="color: green;">Message vu</small>
             <?php else: ?>
                 <small style="color: red;">Message non vu</small>
             <?php endif; ?>
+        <?php endif; ?>
 
-        </div>
-    <?php endforeach; ?>
+    </div>
+<?php endforeach; ?>
+
 </div>
     
         <form id="sendMessageForm" action="chat.php?conversation_id=<?php echo $conversation_id; ?>" method="POST" enctype="multipart/form-data">
