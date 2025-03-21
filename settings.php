@@ -102,16 +102,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Paramètres - Messengeria</title>
     <link rel="stylesheet" href="styles/settingStyle.css">
-    <link rel="stylesheet" href="styles/notifications.css">
-    <script src="scripts/notifications.js" defer></script>
 </head>
 <body>
+    
     <div class="container">
         <div class="top-bar">
             <form action="logout.php" method="POST">
                 <button type="submit" class="logout-button">Déconnexion</button>
             </form>
         </div>
+        <!-- Bouton ON/OFF pour le son des notifications -->
+<button id="toggleSound" class="toggle-button">🔊 Activer le son</button>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const toggleButton = document.getElementById("toggleSound");
+
+        // Vérifier l'état sauvegardé du son
+        let isSoundEnabled = localStorage.getItem("notifSound") === "on";
+
+        function updateButtonText() {
+            toggleButton.textContent = isSoundEnabled ? "🔇 Désactiver le son" : "🔊 Activer le son";
+        }
+
+        updateButtonText();
+
+        toggleButton.addEventListener("click", function () {
+            isSoundEnabled = !isSoundEnabled;
+            localStorage.setItem("notifSound", isSoundEnabled ? "on" : "off");
+            updateButtonText();
+        });
+    });
+</script>
+
+<style>
+    .toggle-button {
+        margin-top: 15px;
+        padding: 10px;
+        font-size: 16px;
+        cursor: pointer;
+    }
+</style>
+
 
         <!-- Photo de profil -->
         <div class="profile-picture">
