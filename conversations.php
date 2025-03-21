@@ -65,6 +65,8 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mes Conversations</title>
     <link rel="stylesheet" href="styles/convStyle.css">
+    <link rel="stylesheet" href="styles/notifications.css">
+    <script src="scripts/notifications.js" defer></script>
 </head>
 <body>
     <div class="container">
