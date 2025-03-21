@@ -98,6 +98,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Conversation - Messengeria</title>
     <link rel="stylesheet" href="styles/chatStyle.css">
+    <link rel="stylesheet" href="styles/notifications.css">
+    <script src="scripts/notifications.js" defer></script>
     <style>
         .messages {
             max-height: 70vh;
