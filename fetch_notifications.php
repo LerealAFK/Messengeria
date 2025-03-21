@@ -8,13 +8,14 @@ if (!isset($_SESSION['email'])) {
 
 $user_email = $_SESSION['email'];
 
-// Récupérer les messages non lus
+// Récupérer les messages non lus avec les pronoms de l'expéditeur
 $stmt = $pdo->prepare("
-    SELECT id, sender_email, message, created_at 
-    FROM private_message 
-    WHERE is_read = 0 
-    AND sender_email != ? 
-    ORDER BY created_at DESC
+    SELECT pm.id, pm.conversation_id, pm.message, pm.created_at, u.pronouns 
+    FROM private_message pm
+    JOIN users u ON pm.sender_email = u.email
+    WHERE pm.is_read = 0 
+    AND pm.sender_email != ? 
+    ORDER BY pm.created_at DESC
 ");
 $stmt->execute([$user_email]);
 $messages = $stmt->fetchAll();
@@ -27,6 +28,16 @@ if ($messages) {
     $stmt->execute($messageIds);
 }
 
-// Retourner les messages au format JSON
-echo json_encode($messages);
+// Retourner les messages avec le bon lien de conversation
+$notifications = array_map(function ($msg) {
+    return [
+        'id' => $msg['id'],
+        'pronouns' => $msg['pronouns'],
+        'message' => $msg['message'],
+        'created_at' => $msg['created_at'],
+        'link' => "chat.php?conversation_id=" . $msg['conversation_id']
+    ];
+}, $messages);
+
+echo json_encode($notifications);
 ?>
