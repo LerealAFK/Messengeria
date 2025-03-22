@@ -20,13 +20,7 @@ $stmt = $pdo->prepare("
 $stmt->execute([$user_email]);
 $messages = $stmt->fetchAll();
 
-// Marquer les messages comme lus immédiatement
-if ($messages) {
-    $messageIds = array_column($messages, 'id');
-    $placeholders = implode(',', array_fill(0, count($messageIds), '?'));
-    $stmt = $pdo->prepare("UPDATE private_message SET is_read = 1 WHERE id IN ($placeholders)");
-    $stmt->execute($messageIds);
-}
+
 
 // Retourner les messages avec le bon lien de conversation
 $notifications = array_map(function ($msg) {
