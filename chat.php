@@ -8,11 +8,7 @@ if (!isset($_SESSION['email'])) {
     exit();
 }
 
-// Vérification que l'utilisateur appartient bien à la conversation
-if ($conversation['user1_email'] !== $user_email && $conversation['user2_email'] !== $user_email) {
-    echo "Vous ne faites pas partie de cette conversation.";
-    exit();
-}
+
 
 
 $user_email = $_SESSION['email'];
