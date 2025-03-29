@@ -112,6 +112,7 @@ if (!empty($messages)) {
 </head>
 <body>
     <div class="container">
+        <p> Nouveau site: <a href="http://192.168.8.133/" </a></p>
         <!-- Bouton pour accéder aux conversations -->
         <div style="margin: 20px 0;">
             <a href="conversations.php">
