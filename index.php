@@ -112,7 +112,7 @@ if (!empty($messages)) {
 </head>
 <body>
     <div class="container">
-        <p> Nouveau site: <a href="http://192.168.8.133/" </a></p>
+        <p> Nouveau site: <a href="http://192.168.8.133/"> messengeria.com </a></p>
         <!-- Bouton pour accéder aux conversations -->
         <div style="margin: 20px 0;">
             <a href="conversations.php">
@@ -154,6 +154,10 @@ if (!empty($messages)) {
         <?php endif; ?>
 
         <!-- Affichage des messages publics -->
+        <h2>Canal actuel : #<?php echo ucfirst(htmlspecialchars($current_channel)); ?></h2>
+        <div class="messages">
+            <?php foreach ($messages as $msg): ?>
+                <div class="message">
         <h2>Canal actuel : #<?php echo ucfirst(htmlspecialchars($current_channel)); ?></h2>
         <div class="messages">
             <?php foreach ($messages as $msg): ?>
