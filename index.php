@@ -13,13 +13,12 @@ $user_email = $_SESSION['email'];
 $stmt = $pdo->prepare("UPDATE users SET is_online = TRUE WHERE email = ?");
 $stmt->execute([$user_email]);
 
-
 // Déterminer le canal actuel
 $current_channel = isset($_GET['channel']) ? $_GET['channel'] : 'general';
 
 // Vérifier si l'utilisateur est mute
 $stmt = $pdo->prepare("SELECT is_mute FROM users WHERE email = ?");
-$stmt->execute([$_SESSION['email']]);
+$stmt->execute([$user_email]);
 $user_status = $stmt->fetch();
 $is_mute = $user_status['is_mute'] ?? false;
 
@@ -39,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message'])) {
             ORDER BY created_at DESC 
             LIMIT 1
         ");
-        $stmt->execute([$_SESSION['email'], $current_channel]);
+        $stmt->execute([$user_email, $current_channel]);
         $last_message = $stmt->fetch();
 
         $can_send = true;
@@ -54,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message'])) {
         // Insérer le message si toutes les conditions sont remplies
         if ($can_send) {
             $stmt = $pdo->prepare("INSERT INTO messages (email, message, channel) VALUES (?, ?, ?)");
-            $stmt->execute([$_SESSION['email'], $message, $current_channel]);
+            $stmt->execute([$user_email, $message, $current_channel]);
         }
     } else {
         $error_message = "Le message ne peut pas être vide.";
@@ -63,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message'])) {
 
 // Récupérer les informations de l'utilisateur connecté
 $stmt = $pdo->prepare("SELECT pronouns FROM users WHERE email = ?");
-$stmt->execute([$_SESSION['email']]);
+$stmt->execute([$user_email]);
 $current_user = $stmt->fetch();
 $pronouns = $current_user['pronouns'] ?? "Utilisateur";
 
@@ -87,17 +86,15 @@ $stmt = $pdo->prepare("
     AND pm.sender_email != :email
     AND pm.is_read = 0
 ");
-$stmt->execute(['email' => $_SESSION['email']]);
+$stmt->execute(['email' => $user_email]);
 $unread_count = $stmt->fetch()['unread_count'];
 
 // Trouver le dernier message reçu
 $last_message_id = 0;
 if (!empty($messages)) {
-  //  $last_message_id = end($messages)['id'];
+    $last_message_id = end($messages)['id'];
 }
 ?>
-
-
 
 <!DOCTYPE html>
 <html lang="fr">
@@ -108,7 +105,6 @@ if (!empty($messages)) {
     <title>Accueil - Messengeria</title>
     <link rel="stylesheet" href="styles/notifications.css">
     <script src="scripts/notifications.js" defer></script>
-
 </head>
 <body>
     <div class="container">
@@ -125,7 +121,6 @@ if (!empty($messages)) {
         </div>
         <div class="groupes-button">
             <button class="groupes-conv-button"><a href="groupes.php">👥</a></button>
-            
         </div>
         <a href="settings.php">
             <button class="settings-button">⚙️</button>
@@ -138,7 +133,7 @@ if (!empty($messages)) {
         <div class="channels">
             <a href="index.php?channel=general" class="<?php echo $current_channel == 'general' ? 'active' : ''; ?>"># Général</a>
             <a href="index.php?channel=suggestion" class="<?php echo $current_channel == 'suggestion' ? 'active' : ''; ?>"># Suggestion</a>
-            <a href="index.php?channel=patchnote" class="<?php echo $current_channel == 'patchnote' ? 'active' : ''; ?>"># Patchnote </a>             
+            <a href="index.php?channel=patchnote" class="<?php echo $current_channel == 'patchnote' ? 'active' : ''; ?>"># Patchnote </a>
         </div>
 
         <!-- Formulaire ou message selon l'état de l'utilisateur -->
@@ -158,14 +153,8 @@ if (!empty($messages)) {
         <div class="messages">
             <?php foreach ($messages as $msg): ?>
                 <div class="message">
-        <h2>Canal actuel : #<?php echo ucfirst(htmlspecialchars($current_channel)); ?></h2>
-        <div class="messages">
-            <?php foreach ($messages as $msg): ?>
-                <div class="message">
                     <div class="message-header">
-                    <img class="profile-picture" src="<?php echo htmlspecialchars($msg['profile_picture'] ? 'uploads/' . $msg['profile_picture'] : 'default_profile.png'); ?>" alt="Photo de profil">
-
-                        
+                        <img class="profile-picture" src="<?php echo htmlspecialchars($msg['profile_picture'] ? 'uploads/' . $msg['profile_picture'] : 'default_profile.png'); ?>" alt="Photo de profil">
                         <p><strong><?php echo htmlspecialchars($msg['pronouns'] ?: "Anonyme"); ?></strong> a écrit :</p>
                     </div>
                     <p><?php echo nl2br(htmlspecialchars($msg['message'])); ?></p>
@@ -193,8 +182,8 @@ if (!empty($messages)) {
             <button class="close-button">Terminer</button>
         </div>
         <div class="tutorial-step" data-step="4">
-            <h2>Videos</h2>
-            <p>Envoyez des videos avec vos amis, attention a bien envoyer un message lier.</p>
+            <h2>Vidéo</h2>
+            <p>Envoyez des vidéos avec vos amis, attention à bien envoyer un message lié.</p>
             <button class="close-button">Terminer</button>
         </div>
     </div>
@@ -205,9 +194,7 @@ if (!empty($messages)) {
     let lastMessageId = 0;  // ID du dernier message reçu
 
     function updateMessages() {
-        const conversationId = <?php echo json_encode($conversation_id); ?>;
-
-        fetch(`update.php?conversation_id=${conversationId}&last_message_id=${lastMessageId}`)
+        fetch(`update.php?last_message_id=${lastMessageId}`)
             .then(response => response.json())
             .then(data => {
                 if (data.error) {
@@ -239,8 +226,6 @@ if (!empty($messages)) {
 
     // Rafraîchir toutes les 2 secondes
     setInterval(updateMessages, 2000);
-</script>
-    
-
+    </script>
 </body>
 </html>
